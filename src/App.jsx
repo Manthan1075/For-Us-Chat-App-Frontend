@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { socket } from './socket'
 import EmojiPicker from 'emoji-picker-react'
+import { useState } from 'react'
 
 function App() {
   useEffect(() => {
@@ -23,6 +24,7 @@ function App() {
       });
     })
 
+
   }, [])
 
   function sendMessage(txt) {
@@ -43,6 +45,7 @@ function App() {
           }
         }}
       />
+
       <EmojiPicker suggestedEmojisMode='recent' onEmojiClick={(emoji) => sendMessage(emoji)} />
     </div>
   )
