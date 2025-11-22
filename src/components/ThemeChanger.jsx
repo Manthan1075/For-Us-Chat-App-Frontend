@@ -1,23 +1,24 @@
-import { Button } from '@mui/material'
-import { DarkModeTwoTone, LightModeTwoTone } from '@mui/icons-material'
-import { useTheme } from '../context/ThemeContext'
+import { useTheme } from "../context/ThemeContext";
+import { Switch } from "../components/ui/switch";
+import { Sun, Moon } from 'lucide-react'
 
 function ThemeChanger() {
-    const { changeTheme, isDarkmode } = useTheme()
+    const { changeTheme, isDarkmode } = useTheme();
 
-    function changeThemeHandler() {
-        changeTheme()
-    }
+    const handleThemeToggle = () => {
+        localStorage.setItem("isDarkmode", JSON.stringify(!isDarkmode));
+        changeTheme();
+    };
 
     return (
-        <div>
-            <Button onClick={changeThemeHandler} title='Change Theme'>
-                {
-                    isDarkmode ? <LightModeTwoTone /> : <DarkModeTwoTone />
-                }
-            </Button>
+        <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {isDarkmode ? <Moon /> : <Sun />}
+            </span>
+
+            <Switch checked={isDarkmode} onCheckedChange={handleThemeToggle} />
         </div>
-    )
+    );
 }
 
-export default ThemeChanger
+export default ThemeChanger;

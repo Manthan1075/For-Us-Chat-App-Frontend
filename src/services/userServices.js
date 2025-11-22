@@ -40,8 +40,6 @@ export const loginUser = async ({ username, password }) => {
     
     });
 
-    console.log("Response At user Services : ",response);
-
     return response?.data || null;
   } catch (error) {
     console.error(
