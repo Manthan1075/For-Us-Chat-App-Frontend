@@ -1,5 +1,5 @@
 import { Outlet, Route, Routes } from "react-router-dom";
-import { LoginForm, AuthCheck, ChatList, Navbar } from './index'
+import { LoginForm, AuthCheck, Navbar, Chatbar, ChatPage, PageNotFound } from './index'
 import { ToastContainer } from "react-toastify";
 
 function App() {
@@ -7,6 +7,7 @@ function App() {
     return (
       <>
         <Navbar />
+        <Chatbar />
         <Outlet />
       </>
     )
@@ -17,12 +18,12 @@ function App() {
         <Route path="/login" element={<LoginForm />} />
         <Route element={<AuthCheck />}>
           <Route element={<Layout />}>
-            <Route path="/" element={<ChatList />} />
+            <Route path="/" element={<ChatPage />} />
+            <Route path="/chat/:id" element={<ChatPage />} />
           </Route>
+          <Route path="*" element={<PageNotFound />} />
         </Route>
-
       </Routes>
-
       <ToastContainer position="top-right" />
     </>
   );

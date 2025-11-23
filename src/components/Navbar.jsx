@@ -1,25 +1,28 @@
 import { useTheme } from '../context/ThemeContext'
 import { useUser } from '../context/UserContext'
 import Profile from './Profile'
-import ThemeChanger from './ThemeChanger'
+import LightLogo from '../../public/assets/Logo.png'
+import DarkLogo from '../../public/assets/Dark_logo.png'
+import ThemeChanger from './ThemeChanger.jsx'
 
 function Navbar() {
     const { isDarkmode } = useTheme()
     const { user } = useUser()
 
     return (
-        <div className='bg-white w-full shadow-lg py-2.5 flex justify-between px-2.5'>
-
-            <div className=''>
+        <div
+            className='flex w-full justify-between items-center border px-5 py-2'
+        >
+            <div>
                 <img
-                    src='../../public/assets/logo.png'
-                    alt='For Us'
-                    className='w-32 h-14 object-cover rounded-lg'
+                    src={isDarkmode ? DarkLogo : LightLogo}
+                    alt="For Us"
+                    className="w-32 h-14 object-cover"
                 />
             </div>
             <ThemeChanger />
             <Profile
-                id={user?.id || ""}
+                id={user?._id || ""}
                 username={user?.username || "Manthan"}
                 bio={user?.bio || "Welcome To My Profile"}
                 profilePhoto={user?.profilePhoto || ""}

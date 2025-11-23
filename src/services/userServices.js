@@ -33,11 +33,11 @@ export const createUser = async ({ username, password, userId }) => {
 
 export const loginUser = async ({ username, password }) => {
   try {
-    
+
     const response = await api.post("/login", {
       username,
       password,
-    
+
     });
 
     return response?.data || null;
@@ -86,6 +86,7 @@ export const fetchAllUsers = async (userId) => {
 export const editProfile = async ({ userId, username, bio, profilePhoto }) => {
   try {
     const formData = new FormData();
+    console.log("DATA FOR EDIT : ", { userId, username, bio, profilePhoto });
 
     if (username) formData.append("username", username);
     if (bio) formData.append("bio", bio);
