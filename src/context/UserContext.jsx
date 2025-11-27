@@ -1,4 +1,5 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useState, useContext, useEffect } from "react";
+import { initiateSocketConnection } from '../socket/socket.js'
 
 const UserContext = createContext();
 
@@ -24,6 +25,11 @@ export const UserProvider = ({ children }) => {
         setUser(null);
         localStorage.removeItem("user");
     };
+
+    useEffect(() => {
+        if (user && user._id.length != 0)
+            initiateSocketConnection(user._id)
+    }, [user])
 
     return (
         <UserContext.Provider value={{ user, addUser, removeUser }}>

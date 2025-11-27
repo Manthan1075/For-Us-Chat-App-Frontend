@@ -19,7 +19,7 @@ function App() {
         <Route element={<AuthCheck />}>
           <Route element={<Layout />}>
             <Route path="/" element={<ChatPage />} />
-            <Route path="/chat/:id" element={<ChatPage />} />
+            <Route path="/chat/:friendId" element={<ChatPage />} />
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Route>

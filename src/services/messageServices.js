@@ -13,31 +13,34 @@ const api = axios.create({
 export const sendMessage = async ({
   text,
   receiver,
-  isHighlighted,
   repliedOf,
-  image,
   userid,
 }) => {
   try {
-    const formdata = new FormData();
-    formdata.append(text);
-    formdata.append(receiver);
-    if (isHighlighted) formdata.append(isHighlighted);
-    if (repliedOf) formdata.append(repliedOf);
-    if (image) formdata.append(image);
+    const body = {
+      text,
+      receiver,
+    };
+    if (repliedOf) {
+      body.repliedOf = repliedOf;
+    }
 
-    const response = await axios.post(`${BACKEND_URL}/send-message`, formdata, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        userId: userid,
-      },
-    });
+    const response = await axios.post(
+      `${BACKEND_URL}/send-message`,
+      body,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          userid: userid,
+        },
+      }
+    );
     return response.data || null;
   } catch (error) {
     console.error("Error While Send Message :", error);
     return {
       success: false,
-      message: error.response?.data?.message || "Something went wrong",
+      message: error.message || "Something went wrong",
     };
   }
 };
@@ -88,33 +91,42 @@ export const getMessages = async ({
   isOnlyHighlighted,
   date,
   userId,
+  senderId,
 }) => {
   try {
-    const queryParams = new URLSearchParams();
+    if (!senderId) {
+      throw new Error("senderId is required");
+    }
+    if (!userId) {
+      throw new Error("userId is required");
+    }
 
+    const queryParams = new URLSearchParams();
     queryParams.append("page", page);
     queryParams.append("limit", limit);
 
     if (isOnlyHighlighted !== undefined) {
       queryParams.append("isOnlyHighlighted", isOnlyHighlighted);
     }
-
     if (date) {
       queryParams.append("date", date);
     }
 
-    const response = await api.get(`/get-messages?${queryParams.toString()}`, {
-      headers: {
-        userid: userId,
-      },
-    });
+    const response = await api.get(
+      `/get-messages/${senderId}?${queryParams.toString()}`,
+      {
+        headers: {
+          userid: userId,
+        },
+      }
+    );
 
-    return response.data;
+    return response.data || null;
   } catch (error) {
     console.error("Error While Get Messages : ", error);
     return {
       success: false,
-      message: error.response?.data?.message || "Something went wrong",
+      message: error?.response?.data?.message || error?.message || "Something went wrong",
     };
   }
 };
@@ -187,3 +199,25 @@ export const toggleHighlightMsg = async ({ messageId, userId }) => {
     };
   }
 };
+
+export const sendImage = async ({ receiverId, image, userId }) => {
+  try {
+    const formData = new FormData();
+    formData.append("image", image);
+    formData.append("receiverId", receiverId);
+    const response = await axios.post(
+      `${BACKEND_URL}/send-image`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          userid: userId,
+        },
+      }
+    );
+    return response.data || null;
+  } catch (error) {
+    console.log("Error While Send Image :", error)
+    return error.message
+  }
+}

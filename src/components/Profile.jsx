@@ -58,7 +58,6 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                 bio: formData.bio,
                 profilePhoto: formData.profilePhoto,
             });
-            console.log("EDIT PROFILE RES :", response);
 
             if (response?.success) {
                 toast.success(response.message || "Profile Updated Successfully", { theme: "colored" });
@@ -89,129 +88,156 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
     };
 
     return (
-        <div>
-            <Popover modal={false}>
-                <PopoverTrigger>
-                    <Avatar className="cursor-pointer">
-                        <AvatarImage src={profilePhoto} />
-                        <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                </PopoverTrigger>
+        <Popover modal={false}>
+            <PopoverTrigger>
+                <Avatar className="cursor-pointer hover:scale-105 transition-transform">
+                    <AvatarImage src={profilePhoto} />
+                    <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                </Avatar>
+            </PopoverTrigger>
 
-                {/* MOBILE-FIRST POPUP */}
-                <PopoverContent className="w-[92vw] sm:w-80 p-0 rounded-xl shadow-lg border">
-                    <Card className="p-4 space-y-6 shadow-none border-none rounded-xl">
+            <PopoverContent
+                className="
+                    w-[92vw] sm:w-96 
+                    p-0 rounded-2xl 
+                    bg-white/70 dark:bg-neutral-900/70 
+                    backdrop-blur-xl 
+                    border-none shadow-2xl
+                "
+            >
+                <Card className="p-5 space-y-6 bg-transparent shadow-none border-none">
 
-                        {/* PROFILE HEADER SECTION */}
-                        <div className="flex flex-col items-center text-center gap-3">
+                    {/* Avatar + Name */}
+                    <div className="flex flex-col items-center text-center gap-3">
 
-                            <div className="relative">
-                                <Avatar className="w-20 h-20 shadow-md border">
-                                    <AvatarImage src={profilePhoto} />
-                                    <AvatarFallback className="text-lg font-bold">
-                                        {username?.charAt(0)?.toUpperCase()}
-                                    </AvatarFallback>
-                                </Avatar>
+                        <div className="relative">
+                            <Avatar className="w-24 h-24 shadow-lg border-2 border-white dark:border-neutral-800">
+                                <AvatarImage src={profilePhoto} />
+                                <AvatarFallback className="text-xl font-bold">
+                                    {username?.charAt(0)?.toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
 
-                                {isEditOn && (
-                                    <label className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow cursor-pointer">
-                                        <Input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                                        <Edit size={16} />
-                                    </label>
-                                )}
-                            </div>
+                            {isEditOn && (
+                                <label className="
+                                    absolute bottom-1 right-1 
+                                    bg-white dark:bg-neutral-800 
+                                    p-2 rounded-full 
+                                    shadow cursor-pointer
+                                ">
+                                    <Input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                    />
+                                    <Edit size={16} />
+                                </label>
+                            )}
+                        </div>
 
-                            {/* Name */}
-                            <Input
-                                name="username"
-                                className={`text-center text-lg font-semibold bg-transparent border-none focus-visible:ring-0 ${!isEditOn && "pointer-events-none opacity-80"
-                                    }`}
-                                value={formData.username}
-                                onChange={handleChange}
-                                readOnly={!isEditOn}
-                            />
+                        {/* Username */}
+                        <Input
+                            name="username"
+                            className={`
+                                text-center text-lg font-semibold 
+                                bg-transparent border-none 
+                                focus-visible:ring-0 
+                                ${!isEditOn && "pointer-events-none opacity-70"}
+                            `}
+                            value={formData.username}
+                            onChange={handleChange}
+                            readOnly={!isEditOn}
+                        />
 
-                            {/* Last Seen */}
+                        {/* Last seen */}
+                        {lastSeen && (
                             <p className="text-xs opacity-70">
                                 Last seen {moment(lastSeen).fromNow()}
                             </p>
-                        </div>
+                        )}
+                    </div>
 
-                        {/* BIO SECTION */}
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Bio</p>
-                            <Textarea
-                                name="bio"
-                                value={formData.bio}
-                                onChange={handleChange}
-                                readOnly={!isEditOn}
-                                className={`min-h-[90px] bg-muted rounded-md ${!isEditOn && "pointer-events-none opacity-80 border-none"
-                                    }`}
-                                placeholder="Write something about yourself..."
-                            />
-                        </div>
+                    {/* BIO */}
+                    <div className="space-y-2">
+                        <p className="text-sm font-medium opacity-80">Bio</p>
+                        <Textarea
+                            name="bio"
+                            value={formData.bio}
+                            onChange={handleChange}
+                            readOnly={!isEditOn}
+                            className={`
+                                min-h-[90px] rounded-xl 
+                                bg-neutral-100 dark:bg-neutral-800 
+                                border-none 
+                                ${!isEditOn && "pointer-events-none opacity-70"}
+                            `}
+                        />
+                    </div>
 
-                        {/* BUTTON SECTION */}
-                        <div className="space-y-3">
-                            {isEditOn ? (
+                    {/* BUTTONS */}
+                    <div className="space-y-3">
+
+                        {isEditOn ? (
+                            <Button
+                                onClick={handleEditUser}
+                                disabled={loading.editLoading}
+                                className="w-full font-semibold text-base py-5 rounded-xl"
+                            >
+                                {loading.editLoading ? <Spinner /> : "Save Changes"}
+                            </Button>
+                        ) : (
+                            <>
                                 <Button
-                                    onClick={handleEditUser}
-                                    disabled={loading.editLoading}
-                                    className="w-full font-semibold"
+                                    variant="outline"
+                                    className="w-full flex gap-2 text-base py-4 rounded-xl"
+                                    onClick={() => setIsEditOn(true)}
                                 >
-                                    {loading.editLoading ? <Spinner /> : "Save Changes"}
+                                    <Edit size={18} /> Edit Profile
                                 </Button>
-                            ) : (
-                                <>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full flex gap-2 font-medium"
-                                        onClick={() => setIsEditOn(true)}
-                                    >
-                                        <Edit size={16} /> Edit Profile
-                                    </Button>
 
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button
-                                                variant="destructive"
-                                                className="w-full flex gap-2 font-medium"
-                                            >
-                                                {loading.deleteLoading ? <Spinner /> : <Trash size={16} />}
-                                                Delete Account
-                                            </Button>
-                                        </AlertDialogTrigger>
+                                {/* DELETE ACCOUNT */}
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            variant="destructive"
+                                            className="w-full flex gap-2 text-base py-4 rounded-xl"
+                                        >
+                                            {loading.deleteLoading ? <Spinner /> : <Trash size={18} />}
+                                            Delete Account
+                                        </Button>
+                                    </AlertDialogTrigger>
 
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Delete Account?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    Are you sure you want to delete your account?
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={handleDeleteUser}>
-                                                    Yes, Delete
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Delete Account?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Are you sure you want to delete your account? This action cannot be undone.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleDeleteUser}>
+                                                Yes, Delete
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
 
-                                    <Button
-                                        variant="secondary"
-                                        className="w-full flex gap-2 font-medium"
-                                        onClick={handleLogout}
-                                    >
-                                        <LogOut size={16} /> Logout
-                                    </Button>
-                                </>
-                            )}
-                        </div>
-                    </Card>
-                </PopoverContent>
-            </Popover>
-        </div>
+                                {/* LOGOUT */}
+                                <Button
+                                    variant="secondary"
+                                    className="w-full flex gap-2 text-base py-4 rounded-xl"
+                                    onClick={handleLogout}
+                                >
+                                    <LogOut size={18} /> Logout
+                                </Button>
+                            </>
+                        )}
+                    </div>
+                </Card>
+            </PopoverContent>
+        </Popover>
     );
 }
 

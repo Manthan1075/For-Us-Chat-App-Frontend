@@ -11,22 +11,40 @@ function Navbar() {
 
     return (
         <div
-            className='flex w-full justify-between items-center border px-5 py-2'
+            className="
+                w-full 
+                flex items-center justify-between 
+                px-4 sm:px-6 py-3
+                border-b
+                bg-white/70 dark:bg-neutral-900/70
+                backdrop-blur-md
+                shadow-sm
+                sticky top-0 z-50
+            "
         >
-            <div>
+            {/* Logo */}
+            <div className="flex items-center gap-3">
                 <img
                     src={isDarkmode ? DarkLogo : LightLogo}
                     alt="For Us"
-                    className="w-32 h-14 object-cover"
+                    className="w-28 sm:w-32 h-auto object-contain drop-shadow"
                 />
             </div>
-            <ThemeChanger />
-            <Profile
-                id={user?._id || ""}
-                username={user?.username || "Manthan"}
-                bio={user?.bio || "Welcome To My Profile"}
-                profilePhoto={user?.profilePhoto || ""}
-            />
+
+            {/* Center blank for spacing (optional future search bar) */}
+            <div className="flex-1 hidden sm:flex justify-center"></div>
+
+            {/* Right Section */}
+            <div className="flex items-center gap-4">
+                <ThemeChanger />
+
+                <Profile
+                    id={user?._id || ""}
+                    username={user?.username || "User"}
+                    bio={user?.bio || "Welcome To My Profile"}
+                    profilePhoto={user?.profilePhoto || ""}
+                />
+            </div>
         </div>
     )
 }
