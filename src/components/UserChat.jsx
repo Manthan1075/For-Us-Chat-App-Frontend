@@ -15,7 +15,9 @@ function UserChat({
     const navigate = useNavigate();
 
     const handleClick = () => {
-        navigate(`/chat/${navigateId}`);
+        if (navigateId) {
+            navigate(`/chat/${navigateId}`);
+        }
     };
 
     return (

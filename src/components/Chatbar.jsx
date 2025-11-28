@@ -4,14 +4,16 @@ import { fetchAllUsers } from "../services/userServices.js";
 import { useUser } from "../context/UserContext.jsx";
 import { Button } from "./ui/button";
 import { SidebarOpen, X, UserPlus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { subscribe } from '../socket/socket.js'
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import CreateUser from "./CreateUser.jsx";
+import { subscribe } from "../socket/socket.js";
+import { useParams } from 'react-router-dom'
 
 function Chatbar() {
     const { user } = useUser();
     const [usersList, setUsersList] = useState([]);
-    const [isOpen, setIsOpen] = useState(false);
-    const navigate = useNavigate();
+    const [isOpen, setIsOpen] = useState(true);
+    const { friendId } = useParams();
 
     const fetchUsers = async () => {
         try {
@@ -28,90 +30,93 @@ function Chatbar() {
 
     useEffect(() => {
         subscribe("online_users", (users) => {
-            console.log("All Online Users:", users);
+            if (!usersList?.users) return;
+            const updated = usersList.users.map((u) => ({
+                ...u,
+                isOnline: users.includes(u._id),
+            }));
+            setUsersList({ users: updated });
         });
-
-        subscribe("user_online", (user) => {
-            console.log("One user came online:", user);
-        });
-    }, []);
-
+    }, [usersList]);
 
     return (
         <>
             <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden absolute top-3 left-3 z-50 rounded-full bg-white/60 dark:bg-neutral-800/60 backdrop-blur-sm shadow"
-                onClick={() => setIsOpen(true)}
+                className="fixed top-3 left-3 z-[100] rounded-full bg-background shadow"
+                onClick={() => setIsOpen(!isOpen)}
             >
-                <SidebarOpen size={22} />
+                {isOpen ? <X size={22} /> : <SidebarOpen size={22} />}
             </Button>
 
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+                    className="fixed inset-0 bg-black/40 md:hidden z-40"
                     onClick={() => setIsOpen(false)}
                 />
             )}
 
-            <div
+            <aside
                 className={`
-                    fixed md:static top-0 left-0 
-                    h-full w-72 
-                    bg-white/80 dark:bg-neutral-900/80 
-                    backdrop-blur-md
-                    border-r border-neutral-200 dark:border-neutral-800
-                    shadow-xl md:shadow-none
-                    transition-transform duration-300 z-50
-                    ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-                `}
+          fixed md:static
+          top-0 left-0 
+          h-[100vh] w-72 
+          bg-background border-r 
+          z-50 shadow-md md:shadow-none
+          transition-transform duration-300
+          ${isOpen ? "translate-x-0" : "-translate-x-full md:-translate-x-0 md:hidden"}
+        `}
             >
-
-                <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-800">
-                    <h2 className="font-semibold text-xl tracking-wide">
-                        Messages
-                    </h2>
-
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="md:hidden"
-                        onClick={() => setIsOpen(false)}
-                    >
-                        <X size={20} />
-                    </Button>
+                <div className="flex items-center justify-between p-4 border-b">
+                    <h2 className="font-semibold text-xl">Messages</h2>
                 </div>
 
-                {/* Create New User */}
                 <div className="p-4">
-                    <Button
-                        className="w-full py-5 rounded-2xl text-base font-medium shadow-sm hover:shadow-md transition"
-                    >
-                        <UserPlus className="mr-2" /> Create New User
-                    </Button>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button className="w-full py-5">
+                                <UserPlus className="mr-2" /> Create New User
+                            </Button>
+                        </DialogTrigger>
+
+                        <DialogContent>
+                            <CreateUser />
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
-                <div className="px-3 pb-6 overflow-y-auto h-[calc(100vh-170px)] space-y-2 custom-scrollbar">
+                <div className="px-3 pb-6 pt-1.5 overflow-y-auto h-[calc(100vh-150px)] space-y-2">
                     {Array.isArray(usersList?.users) && usersList.users.length > 0 ? (
                         usersList.users.map((chatUser) => (
-                            <UserChat
+                            <div
+                                className={`relative flex items-center border rounded-2xl transition-all duration-200 cursor-pointer ${chatUser._id === friendId
+                                        ? "ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-700 shadow"
+                                        : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                    }`}
                                 key={chatUser?._id}
-                                profilePhoto={chatUser.profilePhoto || ""}
-                                username={chatUser.username || ""}
-                                lastSeen={chatUser.lastSeen || ""}
-                                isUnreadMsg={!!chatUser.unreadCount}
-                                unreadMsgCount={chatUser.unreadCount || 0}
-                                navigateId={chatUser?._id}
-                            />
+                            >
+                                <UserChat
+                                    profilePhoto={chatUser.profilePhoto || ""}
+                                    username={chatUser.username || ""}
+                                    lastSeen={chatUser.lastSeen || ""}
+                                    isUnreadMsg={!!chatUser.unreadCount}
+                                    unreadMsgCount={chatUser.unreadCount || 0}
+                                    navigateId={chatUser?._id}
+                                />
+
+                                {chatUser.isOnline && (
+                                    <span className="absolute left-2 top-2 block w-3 h-3 rounded-full bg-green-500 border-2 border-background"></span>
+                                )}
+                            </div>
                         ))
                     ) : (
-                        <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                        <div className="p-4 text-center text-muted-foreground">
                             No users found.
                         </div>
                     )}
                 </div>
-            </div>
+            </aside>
         </>
     );
 }

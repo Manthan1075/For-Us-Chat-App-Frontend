@@ -1,6 +1,8 @@
 import React from "react";
 import { Skeleton } from "./ui/skeleton";
 import { Check, CheckCheck, CornerUpLeft } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog.tsx";
+import ImagePreview from "./ImagePreview.jsx";
 
 function Message({ message, isSender }) {
     if (!message) {
@@ -34,7 +36,6 @@ function Message({ message, isSender }) {
         `}
             >
 
-                {/* REPLY PREVIEW */}
                 {repliedOf && (
                     <div
                         className={`
@@ -52,13 +53,19 @@ function Message({ message, isSender }) {
                     </div>
                 )}
 
-                {/* IMAGE MESSAGE */}
                 {image && (
-                    <img
-                        src={image}
-                        className="rounded-xl mb-2 max-h-64 object-cover shadow"
-                        alt="msg"
-                    />
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <img
+                                src={image}
+                                className="rounded-xl mb-2 max-h-64 object-cover shadow"
+                                alt="msg"
+                            />
+                        </DialogTrigger>
+                        <DialogContent>
+                            <ImagePreview imageUrl={image} />
+                        </DialogContent>
+                    </Dialog>
                 )}
 
                 {/* TEXT MESSAGE */}

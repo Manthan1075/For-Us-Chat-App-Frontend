@@ -15,7 +15,11 @@ export const createUser = async ({ username, password, userId }) => {
     const response = await api.post("/register", {
       username,
       password,
-      userId,
+      addedBy: userId,
+    }, {
+      headers: {
+        userid: userId,
+      },
     });
 
     return response?.data || null;
@@ -53,9 +57,13 @@ export const loginUser = async ({ username, password }) => {
   }
 };
 
-export const fetchProfile = async (userId) => {
+export const fetchProfile = async (friendId, userId) => {
   try {
-    const response = await api.get(`/get-profile/${userId}`);
+    const response = await api.get(`/get-profile/${friendId}`, {
+      headers: {
+        userid: userId
+      }
+    });
     return response.data || null;
   } catch (error) {
     console.log("Error While Fetch Profile :", error);

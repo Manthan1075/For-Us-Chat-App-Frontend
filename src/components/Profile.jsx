@@ -77,6 +77,7 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
         try {
             setLoading((p) => ({ ...p, deleteLoading: true }));
             await deleteUser(id);
+            removeUser()
         } finally {
             setLoading((p) => ({ ...p, deleteLoading: false }));
         }

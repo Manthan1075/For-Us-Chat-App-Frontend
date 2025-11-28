@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BACKEND_URL = `${import.meta.env.VITE_BACKEND_URL}/api/v1/messages`;
+const BACKEND_URL = `${import.meta.env.VITE_SERVER_URL}/api/v1/messages`;
 
 const api = axios.create({
   baseURL: BACKEND_URL,
@@ -25,8 +25,7 @@ export const sendMessage = async ({
       body.repliedOf = repliedOf;
     }
 
-    const response = await axios.post(
-      `${BACKEND_URL}/send-message`,
+    const response = await api.post(`/send-message`,
       body,
       {
         headers: {
@@ -35,6 +34,7 @@ export const sendMessage = async ({
         },
       }
     );
+
     return response.data || null;
   } catch (error) {
     console.error("Error While Send Message :", error);

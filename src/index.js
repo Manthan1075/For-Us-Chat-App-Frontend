@@ -4,5 +4,6 @@ import Navbar from "./components/Navbar";
 import Chatbar from "./components/Chatbar";
 import ChatPage from './pages/ChatPage'
 import PageNotFound from './pages/PageNotFound'
+import SelectUser from './pages/SelectUser.jsx'
 
 export { LoginForm, AuthCheck, Navbar, Chatbar, ChatPage, PageNotFound };
