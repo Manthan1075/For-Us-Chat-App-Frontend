@@ -93,7 +93,7 @@ function CreateUser() {
                     <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-9"
+                        className="absolute right-3 top-9 cursor-pointer"
                     >
                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>

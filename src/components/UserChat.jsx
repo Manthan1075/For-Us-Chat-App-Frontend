@@ -3,14 +3,20 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
+import Profile from "./Profile.jsx";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover.js";
+import { Button } from "./ui/button.js";
 
 function UserChat({
+    id = "",
+    bio = "",
     profilePhoto = "",
     username = "",
     lastSeen = "",
     isUnreadMsg = false,
     unreadMsgCount = 0,
     navigateId = "",
+    isOnline = false,
 }) {
     const navigate = useNavigate();
 
@@ -21,46 +27,51 @@ function UserChat({
     };
 
     return (
-        <button
-            onClick={handleClick}
-            className="
-                w-full flex items-center gap-4 px-4 py-3 
-                rounded-xl border 
-                transition-all 
-                hover:bg-gray-100 dark:hover:bg-neutral-800 
-                active:scale-[0.98]
+        <div className="flex p-3 items-center gap-3 justify-center-safe group">
+            <Profile
+                username={username || ""}
+                bio={bio || ""}
+                profilePhoto={profilePhoto || ""}
+                id={id || ""}
+                lastSeen={lastSeen || ""}
+            />
+
+            <Button
+                onClick={handleClick}
+                variant={'ghost'}
+                className="
+                flex-1 flex items-center gap-4 px-4 py-3 min-w-full
+                rounded-xl cursor-pointer text-left
+                transition-al
+                active:scale-[0.99]
             "
-        >
-            {/* Avatar */}
-            <Avatar className="h-12 w-12 shrink-0">
-                <AvatarImage src={profilePhoto} alt={username} />
-                <AvatarFallback className="text-lg font-semibold">
-                    {username?.charAt(0)?.toUpperCase()}
-                </AvatarFallback>
-            </Avatar>
+            >
+                <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-base truncate text-foreground">{username}</p>
 
-            {/* User Info */}
-            <div className="flex-1 text-left">
-                <p className="font-semibold text-base truncate">{username}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                        {isOnline
+                            ? <span className="text-green-600 dark:text-green-400 font-medium">Online</span>
+                            : lastSeen
+                                ? moment(lastSeen).fromNow()
+                                : "Offline"}
+                    </p>
+                </div>
 
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {lastSeen ? moment(lastSeen).fromNow() : ""}
-                </p>
-            </div>
-
-            {/* Unread Badge */}
-            {isUnreadMsg && unreadMsgCount > 0 && (
-                <Badge
-                    className="
-                        rounded-full min-w-7 h-7 
+                {isUnreadMsg && unreadMsgCount > 0 && (
+                    <Badge
+                        className="
+                        rounded-full h-6 min-w-[1.5rem]
                         flex items-center justify-center 
-                        px-0 text-sm font-semibold
-                    "
-                >
-                    {unreadMsgCount}
-                </Badge>
-            )}
-        </button>
+                        px-1 text-xs font-bold bg-primary text-primary-foreground
+                        animate-in zoom-in
+                        "
+                    >
+                        {unreadMsgCount}
+                    </Badge>
+                )}
+            </Button>
+        </div>
     );
 }
 

@@ -4,7 +4,6 @@ const BACKEND_URL = `${import.meta.env.VITE_SERVER_URL}/api/v1/users`;
 
 const api = axios.create({
   baseURL: BACKEND_URL,
-  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -103,7 +102,7 @@ export const editProfile = async ({ userId, username, bio, profilePhoto }) => {
       formData.append("profilePhoto", profilePhoto);
     }
 
-    const response = await axios.post(
+    const response = await axios.put(
       `${BACKEND_URL}/update-profile/${userId}`,
       formData,
       {

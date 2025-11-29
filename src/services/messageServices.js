@@ -4,7 +4,6 @@ const BACKEND_URL = `${import.meta.env.VITE_SERVER_URL}/api/v1/messages`;
 
 const api = axios.create({
   baseURL: BACKEND_URL,
-  timeout: 3000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -46,14 +45,15 @@ export const sendMessage = async ({
 };
 
 export const editMessage = async ({ text, messageId, userId }) => {
+  console.log("Message For Edit :", text);
+
   try {
     const response = await api.put(
       `/edit-message/${messageId}`,
-      {
-        text,
-      },
+      { text },
       {
         headers: {
+          "Content-Type": "application/json",
           userid: userId,
         },
       }

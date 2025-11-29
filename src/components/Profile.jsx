@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Edit, LogOut, Trash } from "lucide-react";
+import { Edit, LogOut, Trash, X } from "lucide-react";
 import { editProfile, deleteUser } from "../services/userServices";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Textarea } from "./ui/textarea";
@@ -22,6 +22,9 @@ import moment from "moment";
 import Spinner from "./Loaders/Spinner";
 import { toast } from "react-toastify";
 import { useUser } from "../context/UserContext";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog.tsx";
+import ImagePreview from "./ImagePreview.jsx";
+import { Badge } from "./ui/badge.tsx";
 
 function Profile({ id, username, bio, profilePhoto, lastSeen }) {
     const { user, addUser, removeUser } = useUser();
@@ -60,8 +63,10 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
             });
 
             if (response?.success) {
+                console.log("RES :", response);
+
                 toast.success(response.message || "Profile Updated Successfully", { theme: "colored" });
-                addUser(response.data);
+                addUser(response.user);
             } else {
                 toast.error(response.message || "Failed to update profile", { theme: "colored" });
             }
@@ -76,7 +81,16 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
     const handleDeleteUser = async () => {
         try {
             setLoading((p) => ({ ...p, deleteLoading: true }));
-            await deleteUser(id);
+            const response = await deleteUser(id);
+            if (response.success) {
+                toast.success(response.message || "User Account Deleted", {
+                    theme: 'colored'
+                })
+            } else {
+                toast.error(response.message || "Error Occur While Delete User", {
+                    theme: 'colored'
+                })
+            }
             removeUser()
         } finally {
             setLoading((p) => ({ ...p, deleteLoading: false }));
@@ -108,36 +122,60 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
             >
                 <Card className="p-5 space-y-6 bg-transparent shadow-none border-none">
 
-                    {/* Avatar + Name */}
                     <div className="flex flex-col items-center text-center gap-3">
 
                         <div className="relative">
-                            <Avatar className="w-24 h-24 shadow-lg border-2 border-white dark:border-neutral-800">
-                                <AvatarImage src={profilePhoto} />
-                                <AvatarFallback className="text-xl font-bold">
-                                    {username?.charAt(0)?.toUpperCase()}
-                                </AvatarFallback>
-                            </Avatar>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Avatar className="w-24 h-24 shadow-lg border-2 border-white dark:border-neutral-800">
+                                        <AvatarImage src={formData.profilePhoto ? URL.createObjectURL(formData.profilePhoto) : profilePhoto} />
+                                        <AvatarFallback className="text-xl font-bold">
+                                            {username?.charAt(0)?.toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <ImagePreview imageUrl={profilePhoto} />
+                                </DialogContent>
+                            </Dialog>
 
                             {isEditOn && (
-                                <label className="
-                                    absolute bottom-1 right-1 
-                                    bg-white dark:bg-neutral-800 
-                                    p-2 rounded-full 
-                                    shadow cursor-pointer
-                                ">
-                                    <Input
-                                        type="file"
-                                        className="hidden"
-                                        accept="image/*"
-                                        onChange={handleFileChange}
-                                    />
-                                    <Edit size={16} />
-                                </label>
+                                <>
+                                    <label className="
+                                        absolute bottom-1 right-1 
+                                        bg-white dark:bg-neutral-800 
+                                        p-2 rounded-full 
+                                        shadow cursor-pointer
+                                    ">
+                                        <Input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleFileChange}
+                                        />
+                                        <Edit size={16} />
+                                    </label>
+                                    {formData.profilePhoto && (
+                                        <Button
+                                            type="button"
+                                            size="icon"
+                                            variant="destructive"
+                                            className="absolute top-1 right-1 p-1 rounded-full"
+                                            onClick={() =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    profilePhoto: null
+                                                }))
+                                            }
+                                            title="Remove selected image"
+                                        >
+                                            <X size={16} />
+                                        </Button>
+                                    )}
+                                </>
                             )}
                         </div>
 
-                        {/* Username */}
                         <Input
                             name="username"
                             className={`
@@ -151,15 +189,13 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                             readOnly={!isEditOn}
                         />
 
-                        {/* Last seen */}
-                        {lastSeen && (
+                        {lastSeen && user?._id !== id ? (
                             <p className="text-xs opacity-70">
                                 Last seen {moment(lastSeen).fromNow()}
                             </p>
-                        )}
+                        ) : ""}
                     </div>
 
-                    {/* BIO */}
                     <div className="space-y-2">
                         <p className="text-sm font-medium opacity-80">Bio</p>
                         <Textarea
@@ -176,64 +212,65 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                         />
                     </div>
 
-                    {/* BUTTONS */}
                     <div className="space-y-3">
-
-                        {isEditOn ? (
-                            <Button
-                                onClick={handleEditUser}
-                                disabled={loading.editLoading}
-                                className="w-full font-semibold text-base py-5 rounded-xl"
-                            >
-                                {loading.editLoading ? <Spinner /> : "Save Changes"}
-                            </Button>
-                        ) : (
-                            <>
+                        {(user._id === id || user.role === "admin") && (
+                            isEditOn ? (
                                 <Button
-                                    variant="outline"
-                                    className="w-full flex gap-2 text-base py-4 rounded-xl"
-                                    onClick={() => setIsEditOn(true)}
+                                    onClick={handleEditUser}
+                                    disabled={loading.editLoading}
+                                    className="w-full font-semibold text-base py-5 rounded-xl"
                                 >
-                                    <Edit size={18} /> Edit Profile
+                                    {loading.editLoading ? <Spinner /> : "Save Changes"}
                                 </Button>
+                            ) : (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full flex gap-2 text-base py-4 rounded-xl"
+                                        onClick={() => setIsEditOn(true)}
+                                    >
+                                        <Edit size={18} /> Edit Profile
+                                    </Button>
 
-                                {/* DELETE ACCOUNT */}
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                variant="destructive"
+                                                className="w-full flex gap-2 text-base py-4 rounded-xl"
+                                            >
+                                                {loading.deleteLoading ? <Spinner /> : <Trash size={18} />}
+                                                Delete Account
+                                            </Button>
+                                        </AlertDialogTrigger>
+
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete Account?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Are you sure you want to delete your account? This action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleDeleteUser}>
+                                                    Yes, Delete
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+
+                                    {user._id === id && (
                                         <Button
-                                            variant="destructive"
+                                            variant="secondary"
                                             className="w-full flex gap-2 text-base py-4 rounded-xl"
+                                            onClick={handleLogout}
                                         >
-                                            {loading.deleteLoading ? <Spinner /> : <Trash size={18} />}
-                                            Delete Account
+                                            <LogOut size={18} /> Logout
                                         </Button>
-                                    </AlertDialogTrigger>
-
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Delete Account?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Are you sure you want to delete your account? This action cannot be undone.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleDeleteUser}>
-                                                Yes, Delete
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-
-                                {/* LOGOUT */}
-                                <Button
-                                    variant="secondary"
-                                    className="w-full flex gap-2 text-base py-4 rounded-xl"
-                                    onClick={handleLogout}
-                                >
-                                    <LogOut size={18} /> Logout
-                                </Button>
-                            </>
+                                    )
+                                    }
+                                </>
+                            )
                         )}
                     </div>
                 </Card>

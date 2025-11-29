@@ -22,7 +22,6 @@ function Navbar() {
                 sticky top-0 z-50
             "
         >
-            {/* Logo */}
             <div className="flex items-center gap-3">
                 <img
                     src={isDarkmode ? DarkLogo : LightLogo}
@@ -31,17 +30,15 @@ function Navbar() {
                 />
             </div>
 
-            {/* Center blank for spacing (optional future search bar) */}
             <div className="flex-1 hidden sm:flex justify-center"></div>
 
-            {/* Right Section */}
             <div className="flex items-center gap-4">
                 <ThemeChanger />
 
                 <Profile
                     id={user?._id || ""}
-                    username={user?.username || "User"}
-                    bio={user?.bio || "Welcome To My Profile"}
+                    username={user?.username || ""}
+                    bio={user?.bio || ""}
                     profilePhoto={user?.profilePhoto || ""}
                 />
             </div>

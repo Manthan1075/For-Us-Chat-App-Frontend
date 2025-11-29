@@ -25,7 +25,7 @@ function App() {
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Routes>
-      <ToastContainer position="top-right" />
+      <ToastContainer position="top-right" stacked={true} />
     </>
   );
 }
