@@ -4,9 +4,9 @@ import { Button } from "../components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { Image, Send, Smile, X, Highlighter, Pen, Reply, Trash, EllipsisVertical, Rotate3D, RotateCw } from "lucide-react";
 import Message from "../components/Message.jsx";
-import { getMessages, sendImage, sendMessage, editMessage, deleteMessage } from "../services/messageServices.js";
+import { getMessages, sendImage, sendMessage, editMessage, deleteMessage, reactOnMessage, toggleHighlightMsg } from "../services/messageServices.js";
 import { useUser } from "../context/UserContext.jsx";
-import { useParams, useNavigate } from "react-router-dom"; // Added useNavigate for mobile back button
+import { useParams } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
 import { subscribe, unsubscribe } from '../socket/socket.js'
 import { Dialog, DialogContent, DialogTrigger } from "../components/ui/dialog.js";
@@ -16,7 +16,6 @@ import { toast } from "react-toastify";
 function ChatPage() {
   const { user } = useUser();
   const { friendId } = useParams();
-  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const bottomRef = useRef(null);
   const [repliedOf, setRepliedOf] = useState(null);
@@ -24,7 +23,10 @@ function ChatPage() {
     current: 1,
     max: null,
   })
-  const [reaction, setReaction] = useState(null);
+  const [reaction, setReaction] = useState({
+    reaction: "",
+    messageId: ""
+  });
   const [editMsg, setEditMsg] = useState({
     _id: null,
     text: "",
@@ -57,11 +59,18 @@ function ChatPage() {
         limit: 25,
         userId: user?._id,
       });
+
       if (response.success) {
-        setMessages(prev => [...response.data.reverse(), ...prev]);
-        setPages(prev => ({ ...prev, max: response.pagination.totalPages }))
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(msg => msg._id));
+          const newMessages = response.data
+            .reverse()
+            .filter(msg => !existingIds.has(msg._id));
+          return [...newMessages, ...prev];
+        });
+        setPages(prev => ({ ...prev, max: response.pagination.totalPages }));
       } else {
-        toast.error("Failed To Get Messages Please Try Again")
+        toast.error("Failed To Get Messages Please Try Again");
       }
     } catch (error) {
       console.log("ERROR GETTING MESSAGES :", error);
@@ -69,7 +78,6 @@ function ChatPage() {
       setLoading((prev) => ({ ...prev, fetchMessages: false }));
     }
   };
-
 
   const handleSendMsg = async (e) => {
     e.preventDefault();
@@ -156,6 +164,35 @@ function ChatPage() {
     setRepliedOf(msg.text)
   }
 
+  const handleReaction = async () => {
+    try {
+      const response = await reactOnMessage({
+        senderId: friendId,
+        messageId: reaction.messageId,
+        reaction: reaction.reaction,
+        userId: user._id
+      })
+      console.log("React On Message : ", response);
+    } catch (error) {
+      console.log("Error While React On Message :", error);
+
+    }
+  }
+
+  const handleHighlightMsg = async (msgId) => {
+    try {
+      const response = await toggleHighlightMsg({
+        messageId: msgId,
+        userId: user._id
+      })
+      console.log("High Light Res :", response);
+
+    } catch (error) {
+      console.log("Error While Highlight Message :", error);
+
+    }
+  }
+
   useEffect(() => {
     fetchMessages()
   }, [friendId]);
@@ -222,7 +259,7 @@ function ChatPage() {
     <div className="flex flex-col h-dvh bg-white dark:bg-black pt-1.5">
       <Button
         variant="outline"
-        className="fixed top-4 right-4 z-30 p-2 rounded-full h-9 w-9 flex items-center justify-center sm:top-20"
+        className="fixed top-20 right-4 z-30 p-2 rounded-full h-9 w-9 flex items-center justify-center"
         onClick={fetchMessages}
         aria-label="Refresh messages"
         title="Refresh messages"
@@ -393,7 +430,9 @@ function ChatPage() {
                                 text-yellow-700 dark:text-yellow-400 font-semibold
                                 hover:bg-yellow-100/70 dark:hover:bg-yellow-900/60
                                 rounded-lg transition group
-                              "                            >
+                              "
+                              onClick={() => handleHighlightMsg(msg._id)}
+                            >
                               <Highlighter size={16} className="stroke-current opacity-80 group-hover:scale-110 transition" />
                               <span>Highlight</span>
                             </Button>

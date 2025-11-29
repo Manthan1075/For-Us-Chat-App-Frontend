@@ -185,6 +185,8 @@ export const reactOnMessage = async ({
 
 export const toggleHighlightMsg = async ({ messageId, userId }) => {
   try {
+    console.log("Toggle Highlight Message Service Called", userId);
+
     const response = await api.put(`/toggle-highlight/${messageId}`, {
       Headers: {
         userid: userId,
