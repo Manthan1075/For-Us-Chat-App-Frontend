@@ -78,10 +78,10 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
         }
     };
 
-    const handleDeleteUser = async () => {
+    const handleDeleteUser = async (userid) => {
         try {
             setLoading((p) => ({ ...p, deleteLoading: true }));
-            const response = await deleteUser(id);
+            const response = await deleteUser(userid);
             if (response.success) {
                 toast.success(response.message || "User Account Deleted", {
                     theme: 'colored'
@@ -224,13 +224,7 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                                 </Button>
                             ) : (
                                 <>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full flex gap-2 text-base py-4 rounded-xl"
-                                        onClick={() => setIsEditOn(true)}
-                                    >
-                                        <Edit size={18} /> Edit Profile
-                                    </Button>
+
 
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
@@ -252,7 +246,7 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
                                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={handleDeleteUser}>
+                                                <AlertDialogAction onClick={() => handleDeleteUser(id)} disabled={loading.deleteLoading}>
                                                     Yes, Delete
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
@@ -260,13 +254,22 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                                     </AlertDialog>
 
                                     {user._id === id && (
-                                        <Button
-                                            variant="secondary"
-                                            className="w-full flex gap-2 text-base py-4 rounded-xl"
-                                            onClick={handleLogout}
-                                        >
-                                            <LogOut size={18} /> Logout
-                                        </Button>
+                                        <>
+                                            <Button
+                                                variant="outline"
+                                                className="w-full flex gap-2 text-base py-4 rounded-xl"
+                                                onClick={() => setIsEditOn(true)}
+                                            >
+                                                <Edit size={18} /> Edit Profile
+                                            </Button>
+                                            <Button
+                                                variant="secondary"
+                                                className="w-full flex gap-2 text-base py-4 rounded-xl"
+                                                onClick={handleLogout}
+                                            >
+                                                <LogOut size={18} /> Logout
+                                            </Button>
+                                        </>
                                     )
                                     }
                                 </>

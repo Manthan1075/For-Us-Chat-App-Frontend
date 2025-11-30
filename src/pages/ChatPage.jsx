@@ -72,7 +72,7 @@ function ChatPage() {
       const response = await getMessages({
         senderId: friendId,
         page: pages.current,
-        limit: 25,
+        limit: 30,
         userId: user?._id,
       });
 
@@ -165,13 +165,14 @@ function ChatPage() {
         image: image,
         userId: user._id,
       });
+
       if (response.success) {
         const socket = getSocket();
         socket.emit("image_message", {
           message: response.data,
           receiver: friendId,
         });
-        setMessages(prev => [...prev, response]);
+        setMessages(prev => [...prev, response.data]);
         setImage(null);
       } else {
         toast.error(response.message || "Failed To Send Image.")
@@ -214,7 +215,6 @@ function ChatPage() {
       console.log("Error While Edit Message :", error);
     }
   }
-
 
   const handleDeleteMsg = async (messageId) => {
     await toast.promise(
@@ -321,6 +321,13 @@ function ChatPage() {
         if (prev.some(m => m._id === message._id)) return prev;
         return [...prev, message];
       });
+      if (friendId === message.sender) {
+        const socket = getSocket();
+        socket.emit("seen_message", {
+          message: message,
+          receiver: friendId,
+        });
+      }
     };
 
     handlers.handleEditReceiveMessage = (data) => {
@@ -348,27 +355,24 @@ function ChatPage() {
     };
 
     handlers.handleReactOnMsg = ({ message }) => {
-      console.log("Received message reaction:", message);
       setMessages(prev => prev.map(msg =>
         msg._id === message._id ? { ...msg, reaction: message.reaction } : msg
       ));
     };
 
     handlers.handleTypingStatus = (data) => {
-      console.log("Received typing status:", data);
-      setIsTyping(data.isTyping)
+      setIsTyping(data.isTyping || false)
     };
 
     handlers.handleHighlightMsg = ({ message }) => {
-      console.log("Received highlight message:", message);
       setMessages(prev => prev.map(msg =>
         msg._id === message._id ? { ...msg, isHighlighted: message.isHighlighted } : msg
       ));
     };
 
-    handlers.handleImageMsg = ({ image }) => {
-      console.log("Received image message:", image);
-      setMessages(prev => [...prev, image]);
+    handlers.handleImageMsg = (data) => {
+      console.log("Received image message:", data.message);
+      setMessages(prev => [...prev, data.message]);
     };
 
     subscribe("receive_message", handlers.handleReceiveMessage);
@@ -477,6 +481,7 @@ function ChatPage() {
                   </div>
                 </PopoverTrigger>
 
+
                 <PopoverContent className="w-40 p-1 rounded-lg shadow-lg">
                   {/* Popover content logic same as before... */}
                   <div className="flex flex-col gap-1.5 py-2 px-1 rounded-xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md shadow-lg ring-1 ring-indigo-200/60 dark:ring-indigo-600/20 transition-all">
@@ -537,6 +542,13 @@ function ChatPage() {
         ) : (
           <div className="flex h-full items-center justify-center opacity-50 text-sm">
             No messages yet. Say hi!
+          </div>
+        )}
+        {isTyping && (
+          <div className="flex items-center gap-2 px-5 py-3">
+            <span className="text-sm text-blue-500 dark:text-blue-300 animate-pulse font-medium">
+              Typing…
+            </span>
           </div>
         )}
 
