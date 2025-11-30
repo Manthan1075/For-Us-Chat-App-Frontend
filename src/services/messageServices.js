@@ -131,28 +131,6 @@ export const getMessages = async ({
   }
 };
 
-export const markAsSeen = async ({ senderId, userid }) => {
-  try {
-    const response = await api.put(
-      "/mark-as-seen",
-      {
-        senderId,
-      },
-      {
-        Headers: {
-          userid: userid,
-        },
-      }
-    );
-    return response.data || null;
-  } catch (error) {
-    console.error("Error While Mark Message As Seen : ", error);
-    return {
-      success: false,
-      message: error.response?.data?.message || "Something went wrong",
-    };
-  }
-};
 
 export const reactOnMessage = async ({
   senderId,
@@ -185,13 +163,16 @@ export const reactOnMessage = async ({
 
 export const toggleHighlightMsg = async ({ messageId, userId }) => {
   try {
-    console.log("Toggle Highlight Message Service Called", userId);
 
-    const response = await api.put(`/toggle-highlight/${messageId}`, {
-      Headers: {
-        userid: userId,
-      },
-    });
+    const response = await api.put(
+      `/toggle-highlight/${messageId}`,
+      {},
+      {
+        headers: {
+          userid: userId,
+        },
+      }
+    );
     return response.data || null;
   } catch (error) {
     console.error("Error While Highlight Message : ", error);
