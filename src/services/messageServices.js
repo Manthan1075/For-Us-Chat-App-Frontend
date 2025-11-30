@@ -45,7 +45,6 @@ export const sendMessage = async ({
 };
 
 export const editMessage = async ({ text, messageId, userId }) => {
-  console.log("Message For Edit :", text);
 
   try {
     const response = await api.put(

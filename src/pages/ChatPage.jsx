@@ -8,7 +8,7 @@ import { getMessages, sendImage, sendMessage, editMessage, deleteMessage, reactO
 import { useUser } from "../context/UserContext.jsx";
 import { useParams } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
-import { subscribe, unsubscribe } from '../socket/socket.js'
+import { getSocket, initiateSocketConnection, subscribe, unsubscribe } from '../socket/socket.js'
 import { Dialog, DialogContent, DialogTrigger } from "../components/ui/dialog.js";
 import { toast } from "react-toastify";
 import Spinner from "../components/Loaders/Spinner.jsx";
@@ -23,7 +23,7 @@ function ChatPage() {
     current: 1,
     max: null,
   })
-  // Removed unused reaction state if not used elsewhere, kept logic
+  const [isTyping, setIsTyping] = useState(false)
   const [openReactionPopover, setOpenReactionPopover] = useState(null);
   const [editMsg, setEditMsg] = useState({
     _id: null,
@@ -47,7 +47,6 @@ function ChatPage() {
     height: window.innerWidth < 640 ? 320 : 350
   });
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, image, inputMessageData.repliedOf]);
@@ -83,7 +82,7 @@ function ChatPage() {
       }
 
       setMessages(prevMessages => {
-        const existingIds = new Set(prevMessages.map(msg => msg._id));
+        const existingIds = new Set(prevMessages.map(msg => msg?._id));
         const batch = response.data.slice().reverse();
         const filtered = batch.filter(msg => !existingIds.has(msg._id));
 
@@ -105,6 +104,26 @@ function ChatPage() {
     }
   };
 
+  const handleTypingMessage = (text) => {
+    setInputMessageData(prev => ({ ...prev, text: text }));
+
+    const socket = getSocket();
+    if (!isTyping) {
+      socket.emit("typing", {
+        receiver: friendId,
+        isTyping: true,
+      });
+    }
+
+    let typingTimeout;
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      socket.emit("typing", {
+        receiver: friendId,
+        isTyping: false,
+      });
+    }, 1000);
+  }
 
   const handleSendMsg = async (e) => {
     e.preventDefault();
@@ -118,10 +137,18 @@ function ChatPage() {
         repliedOf: inputMessageData.repliedOf || "",
         userid: user._id,
       });
+      if (response.success) {
 
-      setMessages(prev => [...prev, response.data]);
-      setInputMessageData({ text: "", repliedOf: null });
-      setRepliedOf(null); // Clear replied text state
+        const socket = getSocket();
+        socket.emit("send_message", {
+          message: response.data,
+          receiver: friendId,
+        });
+
+        setMessages(prev => [...prev, response.data]);
+        setInputMessageData({ text: "", repliedOf: null });
+        setRepliedOf(null);
+      }
     } catch (error) {
       console.log("ERROR SENDING MESSAGE :", error);
     } finally {
@@ -138,8 +165,17 @@ function ChatPage() {
         image: image,
         userId: user._id,
       });
-      setMessages(prev => [...prev, response]);
-      setImage(null);
+      if (response.success) {
+        const socket = getSocket();
+        socket.emit("image_message", {
+          message: response.data,
+          receiver: friendId,
+        });
+        setMessages(prev => [...prev, response]);
+        setImage(null);
+      } else {
+        toast.error(response.message || "Failed To Send Image.")
+      }
     } catch (error) {
       console.log("ERROR SENDING IMAGE :", error);
     } finally {
@@ -153,38 +189,56 @@ function ChatPage() {
         messageId: editMsg._id,
         text: editMsg.text,
         userId: user._id
-      })
+      });
+
       if (response.success) {
-        setMessages(prev => prev.map(msg =>
-          msg._id === editMsg._id
-            ? { ...msg, text: editMsg.text, isEdited: true }
-            : msg
-        ));
-        toast.success(response.message || "Message Edited")
+        setMessages(prev =>
+          prev.map(msg =>
+            msg._id === editMsg._id
+              ? { ...msg, ...response.data }
+              : msg
+          )
+        );
+        const socket = getSocket();
+        socket.emit("edit_message", {
+          message: response.data,
+          receiver: friendId,
+        });
+        toast.success(response.message || "Message Edited");
       } else {
-        toast.error(response.message || "Failed To Edit Message")
+        toast.error(response.message || "Failed To Edit Message");
       }
       setEditMsg({ _id: null, text: "" });
     } catch (error) {
-      toast.error("Failed To Edit Message")
+      toast.error("Failed To Edit Message");
       console.log("Error While Edit Message :", error);
     }
   }
 
+
   const handleDeleteMsg = async (messageId) => {
-    try {
-      const response = await deleteMessage({
+    await toast.promise(
+      deleteMessage({
         messageId: messageId,
         userId: user._id
-      })
-      if (response.success) {
-        setMessages(prev => prev.filter(msg => msg._id !== messageId));
-      } else { toast.error(response.message || "Failed To Delete") }
-
-    } catch (error) {
-      console.log("Error While Delete Message :", error);
-      toast.error(error.message || "Failed To Delete")
-    }
+      }).then(response => {
+        if (response.success) {
+          setMessages(prev => prev.filter(msg => msg._id !== messageId));
+          const socket = getSocket();
+          socket.emit("image_message", {
+            message: response.data,
+            receiver: friendId,
+          });
+        } else {
+          throw new Error(response.message || "Failed To Delete");
+        }
+      }),
+      {
+        pending: "Deleting...",
+        success: (response) => response?.message || "Message Deleted",
+        error: (err) => err.message || "Failed To Delete"
+      }
+    );
   }
 
   const handleReplyOf = (msg) => {
@@ -195,7 +249,7 @@ function ChatPage() {
   const handleReaction = async (messageId, emoji) => {
     setOpenReactionPopover(null);
 
-    await toast.promise(
+    const response = await toast.promise(
       reactOnMessage({
         senderId: friendId,
         messageId: messageId,
@@ -216,10 +270,16 @@ function ChatPage() {
           : msg
       )
     );
+
+    const socket = getSocket();
+    socket.emit("message_reacted", {
+      message: response.data,
+      receiver: friendId,
+    });
   };
 
   const handleHighlightMsg = async (msgId) => {
-    await toast.promise(
+    const response = await toast.promise(
       toggleHighlightMsg({
         messageId: msgId,
         userId: user._id
@@ -231,13 +291,20 @@ function ChatPage() {
       }
     );
 
-    setMessages(prev =>
-      prev.map(msg =>
-        msg._id === msgId
-          ? { ...msg, isHighlighted: !msg.isHighlighted }
-          : msg
-      )
-    );
+    if (response?.success && response.data) {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg._id === msgId
+            ? { ...msg, isHighlighted: response.data.isHighlighted }
+            : msg
+        )
+      );
+      const socket = getSocket();
+      socket.emit("highlight_message", {
+        message: response.data,
+        receiver: friendId
+      });
+    }
   };
 
 
@@ -248,45 +315,59 @@ function ChatPage() {
   useEffect(() => {
     const handlers = {};
 
+
     handlers.handleReceiveMessage = ({ message }) => {
-      // Check if message already exists to prevent duplicates
       setMessages(prev => {
         if (prev.some(m => m._id === message._id)) return prev;
         return [...prev, message];
       });
     };
 
-    handlers.handleEditReceiveMessage = ({ message }) => {
+    handlers.handleEditReceiveMessage = (data) => {
       setMessages(prev => prev.map(msg =>
-        msg._id === message._id ? { ...msg, ...message } : msg
+        msg._id === data.message._id ? { ...msg, ...data.message } : msg
       ));
     };
 
-    handlers.handleDeleteMsg = ({ message }) => {
-      setMessages(prev => prev.filter(msg => msg._id !== message._id));
+    handlers.handleDeleteMsg = (data) => {
+      console.log("Received delete message:", data);
+      setMessages(prev =>
+        prev.map(msg =>
+          msg._id === data.message._id ? { ...msg, isDeleted: true } : msg
+        )
+      );
     };
 
     handlers.handleMsgSeen = ({ message }) => {
       console.log("Received messages seen:", message);
+      setMessages(prev =>
+        prev.map(msg =>
+          msg._id === message._id ? { ...msg, isSeen: true } : msg
+        )
+      );
     };
 
     handlers.handleReactOnMsg = ({ message }) => {
+      console.log("Received message reaction:", message);
       setMessages(prev => prev.map(msg =>
         msg._id === message._id ? { ...msg, reaction: message.reaction } : msg
       ));
     };
 
-    handlers.handleTypingStatus = ({ isTyping }) => {
-      console.log("Typing status:", isTyping);
+    handlers.handleTypingStatus = (data) => {
+      console.log("Received typing status:", data);
+      setIsTyping(data.isTyping)
     };
 
     handlers.handleHighlightMsg = ({ message }) => {
+      console.log("Received highlight message:", message);
       setMessages(prev => prev.map(msg =>
         msg._id === message._id ? { ...msg, isHighlighted: message.isHighlighted } : msg
       ));
     };
 
     handlers.handleImageMsg = ({ image }) => {
+      console.log("Received image message:", image);
       setMessages(prev => [...prev, image]);
     };
 
@@ -297,6 +378,7 @@ function ChatPage() {
     subscribe("message_reacted", handlers.handleReactOnMsg);
     subscribe("highlight_message", handlers.handleHighlightMsg);
     subscribe("image_message", handlers.handleImageMsg);
+    subscribe("typing", handlers.handleTypingStatus);
 
     return () => {
       unsubscribe("receive_message", handlers.handleReceiveMessage);
@@ -306,14 +388,13 @@ function ChatPage() {
       unsubscribe("message_reacted", handlers.handleReactOnMsg);
       unsubscribe("highlight_message", handlers.handleHighlightMsg);
       unsubscribe("image_message", handlers.handleImageMsg);
+      unsubscribe("typing", handlers.handleTypingStatus);
     };
   }, []);
 
   return (
-    // MAIN CONTAINER: Flex Column, Full Height (dvh handles mobile browsers better)
     <div className="flex flex-col h-dvh bg-white dark:bg-black relative">
 
-      {/* HEADER / FLOATING REFRESH BUTTON */}
       <Button
         variant="outline"
         className="fixed top-20 right-4 z-30 p-2 rounded-full h-9 w-9 flex items-center justify-center shadow-md bg-white/80 dark:bg-black/80 backdrop-blur"
@@ -324,12 +405,10 @@ function ChatPage() {
         <RotateCw size={18} />
       </Button>
 
-      {/* MESSAGES AREA: Flex-1 to take available space, Overflow-auto for scrolling */}
       <div
         className="flex-1 overflow-y-auto px-2 py-4 space-y-4 scroll-smooth [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: "none" }}
       >
-        {/* Load More Button - Sticky inside the scroll container */}
         <div className="flex justify-center pt-2 pb-4 sticky top-0 z-10 pointer-events-none">
           {/* Pointer events auto on button ensures we can click it even if wrapper overlays */}
           <div className="pointer-events-auto bg-gradient-to-b from-white/80 dark:from-black/80 via-white dark:via-black p-2 rounded-b-xl">
@@ -350,8 +429,7 @@ function ChatPage() {
           </div>
         </div>
 
-        {/* LOADING SKELETONS */}
-        {loading.fetchMessages && messages.length === 0 ? (
+        {loading.fetchMessages ? (
           <div className="space-y-3">
             {[...Array(7)].map((_, i) => {
               const isSender = i % 2 === 0;
@@ -371,8 +449,8 @@ function ChatPage() {
             })}
           </div>
         ) : messages.length > 0 ? (
-          messages.map((msg) => {
-            const isSender = msg.sender === user._id;
+          messages.filter(Boolean).map((msg) => {
+            const isSender = msg?.sender === user._id;
 
             if (msg.isDeleted) {
               return (
@@ -390,7 +468,11 @@ function ChatPage() {
                     <Message
                       message={msg}
                       isSender={isSender}
-                      repliedOfText={messages.find(m => m._id === msg.repliedOf)?.text || null}
+                      repliedOfText={
+                        msg.repliedOf
+                          ? (messages.find(m => m && m._id === msg.repliedOf)?.text || null)
+                          : null
+                      }
                     />
                   </div>
                 </PopoverTrigger>
@@ -463,7 +545,7 @@ function ChatPage() {
       </div>
 
       {/* INPUT AREA: Fixed at bottom of Flex Column (Shrink-0 prevents crushing) */}
-      <div className="shrink-0 z-20 bg-white/90 dark:bg-black/90 backdrop-blur-lg border-t border-neutral-200 dark:border-neutral-800">
+      <div className="shrink-0 z-20 bg-white/90 border-t-2 dark:bg-black/90 backdrop-blur-lg  border-neutral-200 dark:border-neutral-800">
 
         {/* 1. Reply Preview Banner */}
         {inputMessageData.repliedOf && (
@@ -529,7 +611,7 @@ function ChatPage() {
                   placeholder="Message..."
                   className="rounded-2xl bg-neutral-100 dark:bg-neutral-900 border-transparent focus:border-blue-500/50 py-3 min-h-[44px] max-h-32 resize-none"
                   value={inputMessageData.text}
-                  onChange={(e) => setInputMessageData({ ...inputMessageData, text: e.target.value })}
+                  onChange={(e) => handleTypingMessage(e.target.value)}
                 />
                 <Button
                   type="submit"
@@ -537,7 +619,10 @@ function ChatPage() {
                   disabled={!inputMessageData.text.trim() || loading.sendMessage}
                   className={`rounded-full shrink-0 h-10 w-10 transition-all ${inputMessageData.text.trim() ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-neutral-200 dark:bg-neutral-800 text-neutral-400"}`}
                 >
-                  <Send size={18} className={inputMessageData.text.trim() ? "ml-0.5" : ""} />
+                  {
+                    loading.sendMessage ? <Spinner size={18} /> :
+                      <Send size={18} className={inputMessageData.text.trim() ? "ml-0.5" : ""} />
+                  }
                 </Button>
               </form>
             </div>

@@ -51,10 +51,11 @@ function UserChat({
 
                     <p className="text-xs text-muted-foreground truncate">
                         {isOnline
-                            ? <span className="text-green-600 dark:text-green-400 font-medium">Online</span>
+                            ? <span className="text-green-600 dark:text-green-400 font-medium text-wrap">Online</span>
                             : lastSeen
                                 ? moment(lastSeen).fromNow()
                                 : "Offline"}
+
                     </p>
                 </div>
 

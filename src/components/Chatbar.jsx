@@ -52,7 +52,7 @@ function Chatbar() {
             <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-3 left-3 z-[100] rounded-full bg-background shadow"
+                className="fixed top-3 left-3 z-[100] rounded-full bg-background shadow"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 {isOpen ? <X size={22} /> : <SidebarOpen size={22} />}
