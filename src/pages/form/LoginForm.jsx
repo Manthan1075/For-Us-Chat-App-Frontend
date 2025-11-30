@@ -53,7 +53,7 @@ function LoginForm() {
             <div className="min-h-screen flex flex-col items-center justify-center">
 
                 <img
-                    src="../../../public/assets/login-chat-illustration.svg"
+                    src="https://ik.imagekit.io/mdzya242z/login-chat-illustration.svg"
                     alt="Login Illustration"
                     className="w-40 mb-3"
                 />
