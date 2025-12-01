@@ -33,6 +33,8 @@ function Message({ message, isSender, repliedOfText }) {
                 <div
                     className={`
                         mb-2 p-2 rounded-xl border-l-4 text-xs
+                        max-w-[75vw] md:max-w-[420px] 
+                        overflow-hidden
                         ${isSender
                             ? "border-white/50 bg-primary/40"
                             : "border-primary bg-neutral-100 dark:bg-neutral-700"
@@ -43,7 +45,7 @@ function Message({ message, isSender, repliedOfText }) {
                         <CornerUpLeft size={12} />
                         <span className="font-semibold">Replying to</span>
                     </div>
-                    <p className="opacity-80 truncate">
+                    <p className="opacity-80 break-words whitespace-pre-line">
                         {repliedOfText || "Image"}
                     </p>
                 </div>
