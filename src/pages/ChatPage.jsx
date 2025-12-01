@@ -321,8 +321,12 @@ function ChatPage() {
         if (prev.some(m => m._id === message._id)) return prev;
         return [...prev, message];
       });
+      const socket = getSocket();
+      socket.emit("delivered_message", {
+        message: message,
+        receiver: friendId,
+      })
       if (friendId === message.sender) {
-        const socket = getSocket();
         socket.emit("seen_message", {
           message: message,
           receiver: friendId,
@@ -346,13 +350,24 @@ function ChatPage() {
     };
 
     handlers.handleMsgSeen = ({ message }) => {
-      console.log("Received messages seen:", message);
       setMessages(prev =>
         prev.map(msg =>
-          msg._id === message._id ? { ...msg, isSeen: true } : msg
+          msg._id === message._id
+            ? { ...msg, isSeen: true }
+            : msg
         )
       );
     };
+
+    handlers.handleMsgDelivered = ({ message }) => {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg._id === message._id
+            ? { ...msg, isDelivered: true }
+            : msg
+        )
+      );
+    }
 
     handlers.handleReactOnMsg = ({ message }) => {
       setMessages(prev => prev.map(msg =>
@@ -371,7 +386,6 @@ function ChatPage() {
     };
 
     handlers.handleImageMsg = (data) => {
-      console.log("Received image message:", data.message);
       setMessages(prev => [...prev, data.message]);
     };
 
@@ -383,6 +397,7 @@ function ChatPage() {
     subscribe("highlight_message", handlers.handleHighlightMsg);
     subscribe("image_message", handlers.handleImageMsg);
     subscribe("typing", handlers.handleTypingStatus);
+    subscribe("delivered_message", handlers.handleMsgDelivered);
 
     return () => {
       unsubscribe("receive_message", handlers.handleReceiveMessage);

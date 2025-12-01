@@ -3,11 +3,13 @@ import UserChat from "./UserChat.jsx";
 import { fetchAllUsers } from "../services/userServices.js";
 import { useUser } from "../context/UserContext.jsx";
 import { Button } from "./ui/button";
-import { SidebarOpen, X, UserPlus, RefreshCw } from "lucide-react";
+import { SidebarOpen, X, UserPlus, RefreshCw, EllipsisVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import CreateUser from "./CreateUser.jsx";
 import { subscribe } from "../socket/socket.js";
 import { useParams } from 'react-router-dom'
+import Profile from "./Profile.jsx";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar.js";
 
 function Chatbar() {
     const { user } = useUser();
@@ -29,8 +31,6 @@ function Chatbar() {
             setLoading(false)
         }
     };
-
-
 
     useEffect(() => {
         fetchUsers();
@@ -58,10 +58,6 @@ function Chatbar() {
                 {isOpen ? <X size={22} /> : <SidebarOpen size={22} />}
             </Button>
 
-
-
-
-
             {isOpen && (
                 <div
                     className="fixed inset-0 bg-black/40 md:hidden max-h-screen z-40"
@@ -71,12 +67,13 @@ function Chatbar() {
 
             <aside
                 className={`
-          absolute md:static
+          fixed md:static
           top-0 left-0 
-          h-[100vh] w-72 
+          h-screen w-80 
           bg-background border-r 
           z-50 shadow-md md:shadow-none
           transition-transform duration-300
+          overflow-hidden
           ${isOpen ? "translate-x-0" : "-translate-x-full md:-translate-x-0 md:hidden"}
         `}
             >
@@ -156,6 +153,7 @@ function Chatbar() {
                         </div>
                     )}
                 </div>
+               
             </aside>
         </>
     );

@@ -93,7 +93,6 @@ export const fetchAllUsers = async (userId) => {
 export const editProfile = async ({ userId, username, bio, profilePhoto }) => {
   try {
     const formData = new FormData();
-    console.log("DATA FOR EDIT : ", { userId, username, bio, profilePhoto });
 
     if (username) formData.append("username", username);
     if (bio) formData.append("bio", bio);
@@ -148,7 +147,7 @@ export const deleteUser = async (userId) => {
   }
 };
 
-export const changePassword = async ({ oldPassword, newPassword, userId }) => {
+export const updatePassword = async ({ oldPassword, newPassword, userId }) => {
   try {
     const response = await api.put(`/change-password/${userId}`, {
       oldPassword,
@@ -159,7 +158,7 @@ export const changePassword = async ({ oldPassword, newPassword, userId }) => {
     console.error("Error While Changing Password : ", error);
     return {
       success: false,
-      error: error.response?.data?.message || "Something went wrong",
+      message: error.response?.data?.message || "Something went wrong",
     };
   }
 };

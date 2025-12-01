@@ -22,9 +22,9 @@ import moment from "moment";
 import Spinner from "./Loaders/Spinner";
 import { toast } from "react-toastify";
 import { useUser } from "../context/UserContext";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog.tsx";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog.tsx";
 import ImagePreview from "./ImagePreview.jsx";
-import { Badge } from "./ui/badge.tsx";
+import ChangePassword from '../components/ChangePassword.jsx'
 
 function Profile({ id, username, bio, profilePhoto, lastSeen }) {
     const { user, addUser, removeUser } = useUser();
@@ -63,8 +63,6 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
             });
 
             if (response?.success) {
-                console.log("RES :", response);
-
                 toast.success(response.message || "Profile Updated Successfully", { theme: "colored" });
                 addUser(response.user);
             } else {
@@ -100,6 +98,15 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
     const handleLogout = () => {
         removeUser();
         window.location.href = "/login";
+    };
+
+    const handleCancelEdit = () => {
+        setFormData({
+            username,
+            bio,
+            profilePhoto: "",
+        });
+        setIsEditOn(false);
     };
 
     return (
@@ -215,13 +222,23 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                     <div className="space-y-3">
                         {(user._id === id || user.role === "admin") && (
                             isEditOn ? (
-                                <Button
-                                    onClick={handleEditUser}
-                                    disabled={loading.editLoading}
-                                    className="w-full font-semibold text-base py-5 rounded-xl"
-                                >
-                                    {loading.editLoading ? <Spinner /> : "Save Changes"}
-                                </Button>
+                                <>
+                                    <Button
+                                        onClick={handleEditUser}
+                                        disabled={loading.editLoading}
+                                        className="w-full font-semibold text-base py-5 rounded-xl"
+                                    >
+                                        {loading.editLoading ? <Spinner /> : "Save Changes"}
+                                    </Button>
+                                    <Button
+                                        onClick={handleCancelEdit}
+                                        variant="outline"
+                                        disabled={loading.editLoading}
+                                        className="w-full font-semibold text-base py-5 rounded-xl"
+                                    >
+                                        Cancel
+                                    </Button>
+                                </>
                             ) : (
                                 <>
 
@@ -262,6 +279,19 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                                             >
                                                 <Edit size={18} /> Edit Profile
                                             </Button>
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button
+                                                        variant='outline'
+                                                        className="w-full flex items-center gap-2 text-base py-4 rounded-xl transition-shadow hover:shadow-lg"
+                                                    >
+                                                        <span className="font-medium">Change Password</span>
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="max-w-md p-6 rounded-2xl shadow-2xl ">
+                                                    <ChangePassword />
+                                                </DialogContent>
+                                            </Dialog>
                                             <Button
                                                 variant="secondary"
                                                 className="w-full flex gap-2 text-base py-4 rounded-xl"
