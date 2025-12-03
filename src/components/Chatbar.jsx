@@ -3,13 +3,11 @@ import UserChat from "./UserChat.jsx";
 import { fetchAllUsers } from "../services/userServices.js";
 import { useUser } from "../context/UserContext.jsx";
 import { Button } from "./ui/button";
-import { SidebarOpen, X, UserPlus, RefreshCw, EllipsisVertical } from "lucide-react";
+import { SidebarOpen, X, UserPlus, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import CreateUser from "./CreateUser.jsx";
 import { subscribe } from "../socket/socket.js";
 import { useParams } from 'react-router-dom'
-import Profile from "./Profile.jsx";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar.js";
 
 function Chatbar() {
     const { user } = useUser();
@@ -79,7 +77,7 @@ function Chatbar() {
             >
 
                 <div className="flex items-center justify-between gap-2 p-4 border-b bg-background">
-                    <h2 className="font-semibold text-xl m-0">Messages</h2>
+                    <h2 className="font-semibold text-xl m-0">Chats</h2>
                     <Button
                         onClick={fetchUsers}
                         variant="outline"
@@ -153,7 +151,7 @@ function Chatbar() {
                         </div>
                     )}
                 </div>
-               
+
             </aside>
         </>
     );

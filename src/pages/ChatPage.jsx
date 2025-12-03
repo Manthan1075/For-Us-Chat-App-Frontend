@@ -309,7 +309,8 @@ function ChatPage() {
 
 
   useEffect(() => {
-    fetchMessages()
+    setMessages([]);
+    fetchMessages();
   }, [friendId]);
 
   useEffect(() => {
@@ -428,9 +429,8 @@ function ChatPage() {
         className="flex-1 overflow-y-auto px-2 py-4 space-y-4 scroll-smooth [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: "none" }}
       >
-        <div className="flex justify-center pt-2 pb-4 sticky top-0 z-10 pointer-events-none">
-          {/* Pointer events auto on button ensures we can click it even if wrapper overlays */}
-          <div className="pointer-events-auto bg-gradient-to-b from-white/80 dark:from-black/80 via-white dark:via-black p-2 rounded-b-xl">
+        <div className="flex justify-center items-center w-full z-10 pointer-events-none">
+          <div className="pointer-events-auto bg-gradient-to-b from-white/80 dark:from-black/80 via-white dark:via-black p-2 rounded-b-xl sticky top-0 z-20 flex justify-center">
             <Button
               variant="outline"
               size="sm"
@@ -567,7 +567,6 @@ function ChatPage() {
           </div>
         )}
 
-        {/* INVISIBLE ELEMENT TO SCROLL TO */}
         <div ref={bottomRef}></div>
       </div>
 

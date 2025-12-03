@@ -3,6 +3,11 @@ import { Check, CheckCheck, CornerUpLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import ImagePreview from "./ImagePreview";
 
+function isLink(text) {
+    if (!text) return false;
+    return /^(https?:\/\/|www\.)[^\s]+$/i.test(text.trim());
+}
+
 function Message({ message, isSender, repliedOfText }) {
     const { text, createdAt, isSeen, isDeleted, image, repliedOf, edits, isHighlighted, reaction } = message;
 
@@ -13,11 +18,20 @@ function Message({ message, isSender, repliedOfText }) {
 
     const isEdited = edits && edits.length > 0;
 
+    if (isDeleted) {
+        return (
+            <div className="flex w-full my-2 justify-center">
+                <div className="bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 px-4 py-2 rounded-xl text-sm italic opacity-90 flex items-center gap-2 shadow-sm">
+                    <span>This message was deleted</span>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div
             className={`
-                relative w-full max-w-fit px-4 py-2 rounded-2xl shadow-sm cursor-pointer
+                relative w-full px-4 py-2 rounded-2xl shadow-sm cursor-pointer
                 ${isSender
                     ? "bg-gradient-to-br from-violet-500 via-violet-600 to-violet-700 text-white"
                     : "bg-neutral-100 dark:bg-neutral-800 text-gray-900 dark:text-gray-100 border border-neutral-200 dark:border-neutral-700"
@@ -27,6 +41,12 @@ function Message({ message, isSender, repliedOfText }) {
                     : ""
                 }
             `}
+            style={{
+                maxWidth: "90vw",
+                wordBreak: "break-word",
+                overflowWrap: "break-word",
+                boxSizing: "border-box"
+            }}
         >
             {/* Reply Preview */}
             {repliedOf && (
@@ -57,8 +77,9 @@ function Message({ message, isSender, repliedOfText }) {
                     <DialogTrigger asChild>
                         <img
                             src={image}
-                            className="rounded-xl mb-2 max-h-60 object-cover shadow-md"
+                            className="rounded-xl mb-2 max-h-60 object-cover shadow-md max-w-full"
                             alt="message-img"
+                            style={{ display: "block" }}
                         />
                     </DialogTrigger>
                     <DialogContent>
@@ -67,30 +88,45 @@ function Message({ message, isSender, repliedOfText }) {
                 </Dialog>
             )}
 
-            <p className={`${isDeleted ? "italic opacity-60" : ""}`}>
-                {text}
+            <p
+                className="text-base break-words whitespace-pre-line max-w-full"
+                style={{
+                    overflowWrap: "break-word",
+                    wordBreak: "break-word",
+                    maxWidth: "100%"
+                }}
+            >
+                {
+                    isLink(text) ? (
+                        <a
+                            href={text}
+                            className="text-blue-50 break-all"
+                            style={{ wordBreak: "break-all", overflowWrap: "break-word", maxWidth: "100%" }}
+                        >
+                            {text}
+                        </a>
+                    ) : text
+                }
             </p>
 
-            {/* Reaction display */}
             {reaction && (
                 <div
                     className={`
-            absolute -bottom-3 
-            ${isSender ? "right-3" : "left-3"}
-            bg-white dark:bg-neutral-900
-            shadow-md border border-neutral-300 dark:border-neutral-700
-            rounded-full px-1.5 py-0.5
-            flex items-center justify-center
-            text-xl 
-            select-none
-            z-20
-        `}
+                        absolute -bottom-3 
+                        ${isSender ? "right-3" : "left-3"}
+                        bg-white dark:bg-neutral-900
+                        shadow-md border border-neutral-300 dark:border-neutral-700
+                        rounded-full px-1.5 py-0.5
+                        flex items-center justify-center
+                        text-xl 
+                        select-none
+                        z-20
+                    `}
                     style={{ transform: "translateY(50%)" }}
                 >
                     {reaction}
                 </div>
             )}
-
 
             <div
                 className={`flex items-center justify-end gap-1 mt-1 text-[10px] 

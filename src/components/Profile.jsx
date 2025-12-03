@@ -243,35 +243,35 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                                 <>
 
 
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button
-                                                variant="destructive"
-                                                className="w-full flex gap-2 text-base py-4 rounded-xl"
-                                            >
-                                                {loading.deleteLoading ? <Spinner /> : <Trash size={18} />}
-                                                Delete Account
-                                            </Button>
-                                        </AlertDialogTrigger>
-
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Delete Account?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    Are you sure you want to delete your account? This action cannot be undone.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleDeleteUser(id)} disabled={loading.deleteLoading}>
-                                                    Yes, Delete
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
 
                                     {user._id === id && (
                                         <>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button
+                                                        variant="destructive"
+                                                        className="w-full flex gap-2 text-base py-4 rounded-xl"
+                                                    >
+                                                        {loading.deleteLoading ? <Spinner /> : <Trash size={18} />}
+                                                        Delete Account
+                                                    </Button>
+                                                </AlertDialogTrigger>
+
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Delete Account?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Are you sure you want to delete your account? This action cannot be undone.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDeleteUser(id)} disabled={loading.deleteLoading}>
+                                                            Yes, Delete
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                             <Button
                                                 variant="outline"
                                                 className="w-full flex gap-2 text-base py-4 rounded-xl"
