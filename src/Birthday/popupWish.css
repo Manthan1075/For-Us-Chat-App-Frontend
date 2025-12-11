@@ -1,0 +1,54 @@
+/* MAIN POP TEXT */
+.birthdayText {
+  color: white;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-family: "Segoe UI", sans-serif;
+  font-weight: 800;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+  margin-bottom: 40px;
+  animation: elasticPop 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* GOLD TEXT */
+.goldText {
+  color: #ffd700;
+  text-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+  display: block;
+  margin-top: 15px;
+}
+
+/* BUTTON */
+.nextBtn {
+  padding: 12px 40px;
+  font-size: 1.2rem;
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.nextBtn:hover {
+  background: white;
+  color: black;
+}
+
+/* POP ANIMATION */
+@keyframes elasticPop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

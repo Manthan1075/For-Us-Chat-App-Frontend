@@ -2,6 +2,8 @@ import React from "react";
 import { Check, CheckCheck, CornerUpLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import ImagePreview from "./ImagePreview";
+import { Button } from "./ui/button.tsx";
+import { useNavigate } from "react-router-dom";
 
 function isLink(text) {
     if (!text) return false;
@@ -17,6 +19,7 @@ function Message({ message, isSender, repliedOfText }) {
     });
 
     const isEdited = edits && edits.length > 0;
+    const navigate = useNavigate();
 
     if (isDeleted) {
         return (
@@ -25,6 +28,17 @@ function Message({ message, isSender, repliedOfText }) {
                     <span>This message was deleted</span>
                 </div>
             </div>
+        )
+    }
+
+    if (text && text.toLowerCase() === "birthday surprise") {
+        return (
+            <Button
+                className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-full shadow-md"
+                onClick={() => navigate('/birthday/popup-wish')}
+            >
+                Surprise
+            </Button>
         )
     }
 

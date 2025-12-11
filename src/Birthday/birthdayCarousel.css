@@ -1,0 +1,107 @@
+/* Soft Watercolor Background */
+.bg-mainGradient {
+  background: linear-gradient(135deg, #ffd7e9 0%, #ffeef6 40%, #fff8fb 100%);
+  background-size: cover;
+  position: relative;
+}
+
+/* Add floating soft brush stroke textures */
+.bg-mainGradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("https://i.ibb.co/VTRY7pS/watercolor.png");
+  opacity: 0.22;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* Glass Card — softer, dreamier */
+.glassCard {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px);
+  border-radius: 28px;
+  padding: 2rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 15px 35px rgba(255, 150, 170, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle hand-drawn star doodles */
+.glassCard::after {
+  content: "✦ ✧ ✦";
+  position: absolute;
+  font-size: 22px;
+  color: #ffadc6;
+  bottom: 12px;
+  right: 20px;
+  opacity: 0.4;
+}
+
+/* Emoji Glow – more cute, pastel */
+.shadow-emoji {
+  box-shadow: 0 12px 30px rgba(255, 120, 150, 0.35);
+  background: #fff;
+}
+
+/* Artistic Title — brush script vibes */
+.titleText {
+  font-family: "Dancing Script", cursive;
+  font-size: 36px;
+  letter-spacing: 1px;
+  background: linear-gradient(45deg, #ff7da5, #ff97ba);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Cute Divider */
+.cute-divider {
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #ffb6d5, #ff8fb0);
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+/* Button — soft pastel brush gradient */
+.artBtn {
+  background: linear-gradient(120deg, #ff8fb4, #ffb6d5);
+  border: none;
+  color: white;
+  padding: 12px 28px;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 600;
+  transition: 0.25s;
+  box-shadow: 0 8px 18px rgba(255, 150, 180, 0.4);
+}
+
+.artBtn:hover {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+}
+
+.artBtn:active {
+  transform: scale(0.96);
+}
+
+/* Subtle floating art icons (optional) */
+.floatingArt {
+  position: absolute;
+  font-size: 32px;
+  opacity: 0.5;
+  animation: floatArt 5s ease-in-out infinite;
+}
+
+@keyframes floatArt {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}

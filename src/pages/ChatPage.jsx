@@ -559,15 +559,13 @@ function ChatPage() {
             No messages yet. Say hi!
           </div>
         )}
-        <div className="flex items-center px-5">
-          {isTyping && (
-            <div className="flex items-center bg-slate-200/80 dark:bg-slate-700/60 backdrop-blur-md px-3 py-2 rounded-2xl shadow-sm border border-white/20 gap-1.5 w-fit">
-              <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-[typingBounce_0.8s_infinite]"></span>
-              <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-[typingBounce_0.8s_infinite_0.2s]"></span>
-              <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-[typingBounce_0.8s_infinite_0.4s]"></span>
-            </div>
-          )}
-        </div>
+        {isTyping && (
+          <div className="flex items-center px-5">
+            <span className="animate-bounce w-2 h-2 bg-blue-500 rounded-full mr-1" />
+            <span className="animate-bounce w-2 h-2 bg-blue-500 rounded-full mr-1" style={{ animationDelay: "0.2s" }} />
+            <span className="animate-bounce w-2 h-2 bg-blue-500 rounded-full" style={{ animationDelay: "0.4s" }} />
+          </div>
+        )}
 
 
 
