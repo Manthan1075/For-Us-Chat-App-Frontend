@@ -261,7 +261,7 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
                                                     <AlertDialogHeader>
                                                         <AlertDialogTitle>Delete Account?</AlertDialogTitle>
                                                         <AlertDialogDescription>
-                                                            Are you sure you want to delete your account? This action cannot be undone.
+                                                            Are you sure you want to delete your '{user.username}' account? This action cannot be undone.
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>

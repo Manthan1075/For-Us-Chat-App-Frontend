@@ -50,10 +50,10 @@ function Chatbar() {
             <Button
                 variant="ghost"
                 size="icon"
-                className="fixed top-3 left-3 z-[100] rounded-full bg-background shadow"
+                className="fixed top-3 left-0.5 z-[100] rounded-full bg-background shadow"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                {isOpen ? <X size={22} /> : <SidebarOpen size={22} />}
+                {isOpen ? <X size={30} /> : <SidebarOpen size={30} />}
             </Button>
 
             {isOpen && (
@@ -77,7 +77,7 @@ function Chatbar() {
             >
 
                 <div className="flex items-center justify-between gap-2 p-4 border-b bg-background">
-                    <h2 className="font-semibold text-xl m-0">Chats</h2>
+                    <h2 className="font-semibold text-xl m-0 ml-10">Chats</h2>
                     <Button
                         onClick={fetchUsers}
                         variant="outline"

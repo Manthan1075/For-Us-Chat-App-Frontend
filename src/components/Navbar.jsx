@@ -23,13 +23,11 @@ function Navbar() {
             "
         >
             <div className="flex items-center gap-3">
-                <a href="/">
-                    <img
-                        src={isDarkmode ? DarkLogo : LightLogo}
-                        alt="For Us"
-                        className="w-28 sm:w-32 h-auto object-contain drop-shadow"
-                    />
-                </a>
+                <img
+                    src={isDarkmode ? DarkLogo : LightLogo}
+                    alt="For Us"
+                    className="w-28 sm:w-32 h-auto object-contain drop-shadow"
+                />
             </div>
 
             <div className="flex-1 hidden sm:flex justify-center"></div>

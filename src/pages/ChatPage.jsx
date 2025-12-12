@@ -12,6 +12,7 @@ import { getSocket, initiateSocketConnection, subscribe, unsubscribe } from '../
 import { Dialog, DialogContent, DialogTrigger } from "../components/ui/dialog.js";
 import { toast } from "react-toastify";
 import Spinner from "../components/Loaders/Spinner.jsx";
+import MessageSkeleton from "../components/Loaders/MessageSkeleton.jsx";
 
 function ChatPage() {
   const { user } = useUser();
@@ -319,17 +320,13 @@ function ChatPage() {
 
     handlers.handleReceiveMessage = ({ message }) => {
       setMessages(prev => {
-        if (prev.some(m => m._id === message._id)) return prev;
+        if (prev.find(m => m._id === message._id)) return prev;
         return [...prev, message];
       });
-      const socket = getSocket();
-      socket.emit("delivered_message", {
-        message: message,
-        receiver: friendId,
-      })
-      if (friendId === message.sender) {
+      if (message.sender === friendId) {
+        const socket = getSocket();
         socket.emit("seen_message", {
-          message: message,
+          message,
           receiver: friendId,
         });
       }
@@ -393,7 +390,7 @@ function ChatPage() {
     subscribe("receive_message", handlers.handleReceiveMessage);
     subscribe("edit_message", handlers.handleEditReceiveMessage);
     subscribe("delete_message", handlers.handleDeleteMsg);
-    subscribe("messages_seen", handlers.handleMsgSeen);
+    subscribe("seen_message", handlers.handleMsgSeen);
     subscribe("message_reacted", handlers.handleReactOnMsg);
     subscribe("highlight_message", handlers.handleHighlightMsg);
     subscribe("image_message", handlers.handleImageMsg);
@@ -404,7 +401,7 @@ function ChatPage() {
       unsubscribe("receive_message", handlers.handleReceiveMessage);
       unsubscribe("edit_message", handlers.handleEditReceiveMessage);
       unsubscribe("delete_message", handlers.handleDeleteMsg);
-      unsubscribe("messages_seen", handlers.handleMsgSeen);
+      unsubscribe("seen_message", handlers.handleMsgSeen);
       unsubscribe("message_reacted", handlers.handleReactOnMsg);
       unsubscribe("highlight_message", handlers.handleHighlightMsg);
       unsubscribe("image_message", handlers.handleImageMsg);
@@ -450,22 +447,7 @@ function ChatPage() {
 
         {loading.fetchMessages ? (
           <div className="space-y-3">
-            {[...Array(7)].map((_, i) => {
-              const isSender = i % 2 === 0;
-              return (
-                <div
-                  key={i}
-                  className={`flex w-full items-start gap-2 animate-pulse ${isSender ? "justify-end sm:pr-8" : "justify-start sm:pl-8"}`}
-                >
-                  {!isSender && (<div className="rounded-full bg-slate-200 dark:bg-neutral-800 w-8 h-8 shrink-0" />)}
-                  <div className={`space-y-2 max-w-[78vw] sm:max-w-xs ${isSender ? "bg-blue-200 dark:bg-blue-900 ml-auto rounded-xl rounded-br-none sm:rounded-tr-none px-3 py-2" : "bg-slate-200 dark:bg-neutral-800 mr-auto rounded-xl rounded-bl-none sm:rounded-tl-none px-3 py-2"}`}>
-                    <div className="h-3 w-24 rounded bg-slate-300 dark:bg-neutral-700" />
-                    <div className="h-3 w-40 rounded bg-slate-300 dark:bg-neutral-700" />
-                  </div>
-                  {isSender && (<div className="hidden sm:block rounded-full bg-blue-200 dark:bg-blue-900 w-8 h-8 shrink-0" />)}
-                </div>
-              );
-            })}
+            <MessageSkeleton amount={10} />
           </div>
         ) : messages.length > 0 ? (
           messages.filter(Boolean).map((msg) => {
@@ -501,7 +483,7 @@ function ChatPage() {
                   {/* Popover content logic same as before... */}
                   <div className="flex flex-col gap-1.5 py-2 px-1 rounded-xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md shadow-lg ring-1 ring-indigo-200/60 dark:ring-indigo-600/20 transition-all">
                     <div className="text-xs text-neutral-600 dark:text-neutral-400 pb-2">
-                      {msg.createdAt ? new Date(msg.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "Unknown"}
+                      {msg.createdAt ? new Date(msg.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Unknown"}
                     </div>
                     {isSender ? (
                       <>
@@ -519,7 +501,7 @@ function ChatPage() {
                               </DialogTrigger>
                               <DialogContent className="flex flex-col gap-4 p-6 rounded-lg bg-white dark:bg-neutral-900 shadow-xl">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1" htmlFor={`edit-msg-${msg.id}`}>Edit message</label>
-                                <Input id={`edit-msg-${msg.id}`} value={editMsg.text} onChange={(e) => setEditMsg({ _id: msg._id, text: e.target.value })} placeholder={msg.text || "Type New Message..."} className="mb-2 w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                                <Input id={`edit-msg-${msg.id}`} value={editMsg.text || msg.text} onChange={(e) => setEditMsg({ _id: msg._id, text: e.target.value })} placeholder={msg.text || "Type New Message..."} className="mb-2 w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-indigo-400" />
                                 <Button className="w-full font-semibold py-2 rounded-lg transition" disabled={loading.editMessage} onClick={handleEditMsg}>{loading.editMessage ? <Spinner /> : "Save Changes"}</Button>
                               </DialogContent>
                             </Dialog>
