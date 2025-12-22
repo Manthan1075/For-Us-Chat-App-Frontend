@@ -4,10 +4,24 @@ const BACKEND_URL = `${import.meta.env.VITE_SERVER_URL}/api/v1/users`;
 
 const api = axios.create({
   baseURL: BACKEND_URL,
+  timeout: 60000,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+export const checkServerStatus = async () => {
+  try {
+    const response = await axios.get(`${import.meta.env.VITE_SERVER_URL}/check-status`);
+    return response.data || null;
+  } catch (error) {
+    console.error("Error checking server status:", error);
+    return {
+      success: false,
+      error: error.response?.data?.message || "Something went wrong",
+    };
+  }
+}
 
 export const createUser = async ({ username, password, userId }) => {
   try {

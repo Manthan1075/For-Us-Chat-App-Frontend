@@ -9,6 +9,7 @@ import { useTheme } from '../../context/ThemeContext.jsx'
 import { useNavigate } from 'react-router-dom'
 import lightLogo from '../../../public/assets/Logo.png'
 import darkLogo from '../../../public/assets/Dark_logo.png'
+import ServerStatus from "../../components/ServerStatus.jsx";
 
 function LoginForm() {
     const [data, setData] = useState({ username: "", password: "" });
@@ -138,6 +139,7 @@ function LoginForm() {
 
                 </form>
             </div>
+            <ServerStatus />
         </div>
     );
 }

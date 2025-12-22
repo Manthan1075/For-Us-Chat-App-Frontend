@@ -8,7 +8,7 @@ import { getMessages, sendImage, sendMessage, editMessage, deleteMessage, reactO
 import { useUser } from "../context/UserContext.jsx";
 import { useParams } from "react-router-dom";
 import EmojiPicker from "emoji-picker-react";
-import { getSocket, initiateSocketConnection, subscribe, unsubscribe } from '../socket/socket.js'
+import { getSocket, subscribe, unsubscribe } from '../socket/socket.js'
 import { Dialog, DialogContent, DialogTrigger } from "../components/ui/dialog.js";
 import { toast } from "react-toastify";
 import Spinner from "../components/Loaders/Spinner.jsx";
