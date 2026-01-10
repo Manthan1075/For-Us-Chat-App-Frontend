@@ -641,39 +641,6 @@ function ChatPage() {
           <div className="p-2 sm:p-3 max-w-4xl mx-auto w-full">
             <div className="flex items-end gap-2">
               {/* Emoji Picker */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="shrink-0 text-neutral-500 hover:text-blue-500 h-10 w-10 rounded-full">
-                    <Smile size={24} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0 border-none bg-transparent shadow-none" align="start" side="top">
-                  <EmojiPicker onEmojiClick={(emoji) => setInputMessageData(prev => ({ ...prev, text: prev.text + emoji.emoji }))} searchDisabled previewConfig={{ showPreview: false }} theme="auto" width={300} height={350} />
-                </PopoverContent>
-              </Popover>
-
-              {/* Image Attachment Trigger */}
-
-
-              {/* Text Input */}
-              <form onSubmit={handleSendMsg} className="flex-1 flex gap-2 items-end">
-                <Input
-                  placeholder="Message..."
-                  className="rounded-2xl bg-neutral-100 dark:bg-neutral-900 border-transparent focus:border-blue-500/50 py-3 min-h-[44px] max-h-32 resize-none"
-                  value={inputMessageData.text}
-                  onChange={(e) => handleTypingMessage(e.target.value)}
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  disabled={!inputMessageData.text.trim() || loading.sendMessage}
-                  className={`rounded-full shrink-0 h-10 w-10 transition-all ${inputMessageData.text.trim() ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-neutral-200 dark:bg-neutral-800 text-neutral-400"}`}
-                >
-                  {
-                    loading.sendMessage ? <Spinner size={18} /> :
-                      <Send size={18} className={inputMessageData.text.trim() ? "ml-0.5" : ""} />
-                  }
-                </Button>
 
                 <Menubar>
                   <MenubarMenu>
@@ -759,6 +726,40 @@ function ChatPage() {
                     </MenubarContent>
                   </MenubarMenu>
                 </Menubar>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="shrink-0 text-neutral-500 hover:text-blue-500 h-10 w-10 rounded-full">
+                    <Smile size={24} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 border-none bg-transparent shadow-none" align="start" side="top">
+                  <EmojiPicker onEmojiClick={(emoji) => setInputMessageData(prev => ({ ...prev, text: prev.text + emoji.emoji }))} searchDisabled previewConfig={{ showPreview: false }} theme="auto" width={300} height={350} />
+                </PopoverContent>
+              </Popover>
+
+              {/* Image Attachment Trigger */}
+
+
+              {/* Text Input */}
+              <form onSubmit={handleSendMsg} className="flex-1 flex gap-2 items-end">
+                <Input
+                  placeholder="Message..."
+                  className="rounded-2xl bg-neutral-100 dark:bg-neutral-900 border-transparent focus:border-blue-500/50 py-3 min-h-[44px] max-h-32 resize-none"
+                  value={inputMessageData.text}
+                  onChange={(e) => handleTypingMessage(e.target.value)}
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={!inputMessageData.text.trim() || loading.sendMessage}
+                  className={`rounded-full shrink-0 h-10 w-10 transition-all ${inputMessageData.text.trim() ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-neutral-200 dark:bg-neutral-800 text-neutral-400"}`}
+                >
+                  {
+                    loading.sendMessage ? <Spinner size={18} /> :
+                      <Send size={18} className={inputMessageData.text.trim() ? "ml-0.5" : ""} />
+                  }
+                </Button>
 
 
               </form>
