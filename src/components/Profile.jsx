@@ -198,7 +198,7 @@ function Profile({ id, username, bio, profilePhoto, lastSeen }) {
 
                         {lastSeen && user?._id !== id ? (
                             <p className="text-xs opacity-70">
-                                Last seen {moment(lastSeen).fromNow()}
+                                Last seen {lastSeen ? new Date(lastSeen).toLocaleString() : ""}
                             </p>
                         ) : ""}
                     </div>

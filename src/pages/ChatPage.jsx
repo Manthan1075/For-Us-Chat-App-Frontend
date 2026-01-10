@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
-import { Image, Send, Smile, X, Highlighter, Pen, Reply, Trash, RotateCw } from "lucide-react";
+import { Image, Send, Smile, X, Highlighter, Pen, Reply, Trash, RotateCw, Brush, Plus } from "lucide-react";
 import Message from "../components/Message.jsx";
 import { getMessages, sendImage, sendMessage, editMessage, deleteMessage, reactOnMessage, toggleHighlightMsg } from "../services/messageServices.js";
 import { useUser } from "../context/UserContext.jsx";
@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogTrigger } from "../components/ui/dialog.js
 import { toast } from "react-toastify";
 import Spinner from "../components/Loaders/Spinner.jsx";
 import MessageSkeleton from "../components/Loaders/MessageSkeleton.jsx";
+import Canvas from "../components/Canvas/Canvas.jsx";
+import { Menubar, MenubarTrigger, MenubarItem, MenubarMenu, MenubarContent } from '../components/ui/menubar'
 
 function ChatPage() {
   const { user } = useUser();
@@ -25,7 +27,9 @@ function ChatPage() {
     max: null,
   })
   const [isTyping, setIsTyping] = useState(false)
+  const [isDrawing, setIsDrawing] = useState(false)
   const [openReactionPopover, setOpenReactionPopover] = useState(null);
+  const [CanvasOpen, setCanvasOpen] = useState(false);
   const [editMsg, setEditMsg] = useState({
     _id: null,
     text: "",
@@ -373,6 +377,10 @@ function ChatPage() {
       ));
     };
 
+    handlers.handleDrawingStatus = (data) => {
+      setIsDrawing(data.drawing || false)
+    };
+
     handlers.handleTypingStatus = (data) => {
       setIsTyping(data.isTyping || false)
     };
@@ -384,6 +392,8 @@ function ChatPage() {
     };
 
     handlers.handleImageMsg = (data) => {
+      console.log("Image MEssage Received :", data);
+
       setMessages(prev => [...prev, data.message]);
     };
 
@@ -396,6 +406,7 @@ function ChatPage() {
     subscribe("image_message", handlers.handleImageMsg);
     subscribe("typing", handlers.handleTypingStatus);
     subscribe("delivered_message", handlers.handleMsgDelivered);
+    subscribe("drawing", handlers.handleDrawingStatus);
 
     return () => {
       unsubscribe("receive_message", handlers.handleReceiveMessage);
@@ -406,6 +417,7 @@ function ChatPage() {
       unsubscribe("highlight_message", handlers.handleHighlightMsg);
       unsubscribe("image_message", handlers.handleImageMsg);
       unsubscribe("typing", handlers.handleTypingStatus);
+      unsubscribe("drawing", handlers.handleDrawingStatus);
     };
   }, []);
 
@@ -414,7 +426,7 @@ function ChatPage() {
 
       <Button
         variant="outline"
-        className="fixed top-20 right-4 z-30 p-2 rounded-full h-9 w-9 flex items-center justify-center shadow-md bg-white/80 dark:bg-black/80 backdrop-blur"
+        className="fixed top-20 right-4 z-20 p-2 rounded-full h-9 w-9 flex items-center justify-center shadow-md bg-white/80 dark:bg-black/80 backdrop-blur"
         onClick={fetchMessages}
         aria-label="Refresh messages"
         title="Refresh messages"
@@ -526,7 +538,13 @@ function ChatPage() {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0 border-none bg-transparent shadow-none z-[100] sm:z-50 max-h-[calc(100vh-8rem)] overflow-hidden" align={isMobile ? "center" : "start"} side={isMobile ? "bottom" : "left"} sideOffset={isMobile ? 12 : 4} alignOffset={isMobile ? 0 : 0} collisionPadding={isMobile ? 8 : 4} onClick={(e) => e.stopPropagation()}>
-                            <EmojiPicker onEmojiClick={(emojiObj) => handleReaction(msg._id, emojiObj.emoji)} searchDisabled previewConfig={{ showPreview: false }} theme="auto" width={emojiPickerSize.width} height={emojiPickerSize.height} />
+                            <EmojiPicker
+                              onEmojiClick={(emojiObj) => handleReaction(msg._id, emojiObj.emoji)}
+                              previewConfig={{ showPreview: false }}
+                              theme="auto" width={emojiPickerSize.width}
+                              height={emojiPickerSize.height}
+                              reactionsDefaultOpen={true}
+                            />
                           </PopoverContent>
                         </Popover>
                       </>
@@ -541,13 +559,36 @@ function ChatPage() {
             No messages yet. Say hi!
           </div>
         )}
-        {isTyping && (
-          <div className="flex items-center px-5">
-            <span className="animate-bounce w-2 h-2 bg-blue-500 rounded-full mr-1" />
-            <span className="animate-bounce w-2 h-2 bg-blue-500 rounded-full mr-1" style={{ animationDelay: "0.2s" }} />
-            <span className="animate-bounce w-2 h-2 bg-blue-500 rounded-full" style={{ animationDelay: "0.4s" }} />
-          </div>
-        )}
+        {/* Animated Typing/Drawing Status */}
+        <div className="relative min-h-[28px]">
+          {(isTyping || isDrawing) && (
+            <div
+              className={`
+                flex items-center px-5 gap-2
+                transition-all duration-300
+                ${isTyping || isDrawing ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}
+                animate-in fade-in slide-in-from-bottom-2
+                absolute left-0 w-full
+              `}
+              style={{ pointerEvents: "none" }}
+            >
+              {isTyping && (
+                <div className="flex items-center mr-2">
+                  <span className="animate-bounce w-2 h-2 bg-blue-500 rounded-full mr-1" />
+                  <span className="animate-bounce w-2 h-2 bg-blue-500 rounded-full mr-1" style={{ animationDelay: "0.2s" }} />
+                  <span className="animate-bounce w-2 h-2 bg-blue-500 rounded-full" style={{ animationDelay: "0.4s" }} />
+                  <span className="ml-2 text-xs text-blue-600 dark:text-blue-300 font-medium">Typing...</span>
+                </div>
+              )}
+              {isDrawing && (
+                <div className="flex items-center">
+                  <span className="animate-spin w-2.5 h-2.5 mr-2 rounded-full border-2 border-pink-500 border-t-transparent" />
+                  <span className="text-xs text-pink-600 dark:text-pink-300 font-medium">Drawing...</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
 
 
@@ -580,6 +621,8 @@ function ChatPage() {
           </div>
         )}
 
+
+
         {/* 2. Image Upload Preview Mode */}
         {image ? (
           <div className="p-4 flex flex-col items-center gap-4 animate-in slide-in-from-bottom-5">
@@ -610,10 +653,7 @@ function ChatPage() {
               </Popover>
 
               {/* Image Attachment Trigger */}
-              <label className="cursor-pointer flex items-center justify-center h-10 w-10 shrink-0 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 transition-colors">
-                <Input type="file" className="hidden" accept="image/*" onChange={(e) => { if (e.target.files[0]) setImage(e.target.files[0]); }} />
-                <Image size={24} />
-              </label>
+
 
               {/* Text Input */}
               <form onSubmit={handleSendMsg} className="flex-1 flex gap-2 items-end">
@@ -634,10 +674,100 @@ function ChatPage() {
                       <Send size={18} className={inputMessageData.text.trim() ? "ml-0.5" : ""} />
                   }
                 </Button>
+
+                <Menubar>
+                  <MenubarMenu>
+                    <MenubarTrigger className="
+      h-10 w-10 flex items-center justify-center
+      rounded-full 
+      bg-blue-600 text-white
+      hover:bg-blue-700
+      shadow-md hover:shadow-lg
+      transition-all duration-200
+    ">
+                      <Plus size={18} />
+                    </MenubarTrigger>
+
+                    <MenubarContent
+                      className="
+        mt-3
+        min-w-[180px]
+        p-2
+        rounded-2xl
+        bg-white dark:bg-neutral-900
+        backdrop-blur-md
+        shadow-xl
+        border border-neutral-200 dark:border-neutral-800
+        animate-in fade-in zoom-in
+      "
+                    >
+
+                      {/* DRAW OPTION */}
+                      <MenubarItem
+                        onClick={() => setCanvasOpen(prev => !prev)}
+                        className="
+          group
+          flex items-center gap-3
+          px-4 py-3
+          rounded-xl
+          cursor-pointer
+          hover:bg-blue-50 dark:hover:bg-blue-900
+          transition-all
+        "
+                      >
+                        <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-800">
+                          <Brush size={18} className="text-blue-600 dark:text-blue-300" />
+                        </div>
+
+                        <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                          Draw
+                        </span>
+                      </MenubarItem>
+
+                      {/* IMAGE UPLOAD */}
+                      <MenubarItem className="px-0 py-0 mt-1">
+                        <label
+                          className="
+            group
+            flex items-center gap-3
+            px-4 py-3
+            rounded-xl
+            cursor-pointer
+            hover:bg-purple-50 dark:hover:bg-purple-900
+            transition-all
+          "
+                        >
+                          <Input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files[0]) setImage(e.target.files[0]);
+                            }}
+                          />
+
+                          <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-800">
+                            <Image size={18} className="text-purple-600 dark:text-purple-300" />
+                          </div>
+
+                          <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">
+                            Image
+                          </span>
+                        </label>
+                      </MenubarItem>
+
+                    </MenubarContent>
+                  </MenubarMenu>
+                </Menubar>
+
+
               </form>
             </div>
           </div>
         )}
+        {
+          CanvasOpen && <Canvas showCanvas={setCanvasOpen} setMessage={setMessages} />
+        }
       </div>
     </div>
   );

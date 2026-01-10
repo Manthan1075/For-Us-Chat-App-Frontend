@@ -6,44 +6,52 @@ import { Button } from "./ui/button";
 import { SidebarOpen, X, UserPlus, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import CreateUser from "./CreateUser.jsx";
-import { subscribe } from "../socket/socket.js";
+import { subscribe, getSocket } from "../socket/socket.js";
 import { useParams } from 'react-router-dom'
+import { useFriends } from "../context/FriendsContext.jsx";
 
 function Chatbar() {
     const { user } = useUser();
-    const [usersList, setUsersList] = useState([]);
+    const { friends, setAllFriends, updateOnlineUsers } = useFriends()
     const [isOpen, setIsOpen] = useState(true);
     const { friendId } = useParams();
     const [loading, setLoading] = useState(false)
+    const socket = getSocket();
+
 
     const fetchUsers = async () => {
         try {
-            setLoading(true)
-            const response = await fetchAllUsers(user?._id);
-            if (response.success) {
-                setUsersList(response);
+            setLoading(true);
+            const res = await fetchAllUsers(user._id);
+            if (res.success) {
+                setAllFriends(res.users);
             }
-        } catch (error) {
-            console.error("Error fetching users:", error);
+        } catch (e) {
+            console.error(e);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     };
 
+
     useEffect(() => {
         fetchUsers();
+
+        socket.emit("get_online_users");
+
     }, []);
 
     useEffect(() => {
-        subscribe("online_users", (users) => {
-            if (!usersList?.users) return;
-            const updated = usersList.users.map((u) => ({
-                ...u,
-                isOnline: users.includes(u._id),
-            }));
-            setUsersList({ users: updated });
+        const unsubscribe = subscribe("online_users", (onlineUsers) => {
+            updateOnlineUsers(
+                onlineUsers
+            );
         });
-    }, [usersList]);
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [friends]);
 
     return (
         <>
@@ -119,8 +127,8 @@ function Chatbar() {
                                 <div className="h-3 w-20 bg-gray-200 dark:bg-neutral-700 rounded" />
                             </div>
                         </div>
-                    ) : Array.isArray(usersList?.users) && usersList.users.length > 0 ? (
-                        usersList.users.map((chatUser) => (
+                    ) : Array.isArray(friends) && friends.length > 0 ? (
+                        friends.map((chatUser) => (
                             <div
                                 className={`relative flex items-center border rounded-2xl transition-all duration-200 cursor-pointer ${chatUser._id === friendId
                                     ? "ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-700 shadow"

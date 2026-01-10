@@ -203,3 +203,27 @@ export const sendImage = async ({ receiverId, image, userId }) => {
     return error.message
   }
 }
+
+export const sendDrawing = async ({ receiverId, image, userId }) => {
+  try {
+    const payload = {
+      image,
+      receiverId,
+    };
+    const response = await axios.post(
+      `${BACKEND_URL}/send-drawing`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          userid: userId,
+        },
+      }
+    );
+    return response.data || null;
+  } catch (error) {
+    console.log("Error While Send Drawing :", error)
+    return error.message;
+  }
+}
+
