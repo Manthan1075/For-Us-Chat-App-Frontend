@@ -32,7 +32,10 @@ export const enableNotification = async () => {
             applicationServerKey: urlBase64ToUint8Array(publicKey)
         });
 
-       const res =  await axios.post(`${import.meta.env.VITE_SERVER_URL}/subscribe`, subscription);
+       const res =  await axios.post(`${import.meta.env.VITE_SERVER_URL}/subscribe`, {
+        subscription,
+        userId : "691bfce4fec5b1e4a3e70594",
+    });
         console.log("Notification Enable :",res.data);
         
     } catch (err) {

@@ -21,6 +21,7 @@ function ChatPage() {
   const { friendId } = useParams();
   const [messages, setMessages] = useState([]);
   const bottomRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [repliedOf, setRepliedOf] = useState(null);
   const [pages, setPages] = useState({
     current: 1,
@@ -692,8 +693,17 @@ function ChatPage() {
                     </MenubarItem>
 
                     {/* IMAGE UPLOAD */}
-                    <MenubarItem className="px-0 py-0 mt-1">
-                      <label
+                    <MenubarItem
+                      className="px-0 py-0 mt-1"
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        // Use setTimeout to ensure the menu closes before opening file dialog
+                        setTimeout(() => {
+                          fileInputRef.current?.click();
+                        }, 0);
+                      }}
+                    >
+                      <div
                         className="
             group
             flex items-center gap-3
@@ -702,17 +712,9 @@ function ChatPage() {
             cursor-pointer
             hover:bg-purple-50 dark:hover:bg-purple-900
             transition-all
+            w-full
           "
                       >
-                        <Input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={(e) => {
-                            if (e.target.files[0]) setImage(e.target.files[0]);
-                          }}
-                        />
-
                         <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-800">
                           <Image size={18} className="text-purple-600 dark:text-purple-300" />
                         </div>
@@ -720,12 +722,28 @@ function ChatPage() {
                         <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">
                           Image
                         </span>
-                      </label>
+                      </div>
                     </MenubarItem>
 
                   </MenubarContent>
                 </MenubarMenu>
               </Menubar>
+
+              {/* Hidden file input for image upload */}
+              <Input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setImage(file);
+                  }
+                  // Reset input value to allow selecting the same file again
+                  e.target.value = '';
+                }}
+              />
 
               <Popover>
                 <PopoverTrigger asChild>
