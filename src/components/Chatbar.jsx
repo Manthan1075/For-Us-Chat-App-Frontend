@@ -99,21 +99,19 @@ function Chatbar() {
 
 
 
-                {user.role === "admin" &&
-                    (<div className="p-4">
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button className="w-full py-5">
-                                    <UserPlus className="mr-2" /> Create New User
-                                </Button>
-                            </DialogTrigger>
+                <div className="p-4">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button className="w-full py-5">
+                                <UserPlus className="mr-2" /> Create New User
+                            </Button>
+                        </DialogTrigger>
 
-                            <DialogContent>
-                                <CreateUser />
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                    )}
+                        <DialogContent>
+                            <CreateUser />
+                        </DialogContent>
+                    </Dialog>
+                </div>
 
 
                 <div className="px-3 pb-6 pt-1.5 overflow-y-auto h-[calc(100vh-150px)] space-y-2">
@@ -128,31 +126,33 @@ function Chatbar() {
                             </div>
                         </div>
                     ) : Array.isArray(friends) && friends.length > 0 ? (
-                        friends.map((chatUser) => (
-                            <div
-                                className={`relative flex items-center border rounded-2xl transition-all duration-200 cursor-pointer ${chatUser._id === friendId
-                                    ? "ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-700 shadow"
-                                    : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                                    }`}
-                                key={chatUser?._id}
-                            >
-                                <UserChat
-                                    id={chatUser._id || ""}
-                                    bio={chatUser.bio || ""}
-                                    profilePhoto={chatUser.profilePhoto || ""}
-                                    username={chatUser.username || ""}
-                                    lastSeen={chatUser.lastSeen || ""}
-                                    isUnreadMsg={!!chatUser.unreadCount}
-                                    unreadMsgCount={chatUser.unreadCount || 0}
-                                    navigateId={chatUser?._id}
-                                    isOnline={chatUser.isOnline}
-                                />
+                        friends
+                            .filter((chatUser) => chatUser.username !== "test")
+                            .map((chatUser) => (
+                                <div
+                                    className={`relative flex items-center border rounded-2xl transition-all duration-200 cursor-pointer ${chatUser._id === friendId
+                                        ? "ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-700 shadow"
+                                        : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                                        }`}
+                                    key={chatUser?._id}
+                                >
+                                    <UserChat
+                                        id={chatUser._id || ""}
+                                        bio={chatUser.bio || ""}
+                                        profilePhoto={chatUser.profilePhoto || ""}
+                                        username={chatUser.username || ""}
+                                        lastSeen={chatUser.lastSeen || ""}
+                                        isUnreadMsg={!!chatUser.unreadCount}
+                                        unreadMsgCount={chatUser.unreadCount || 0}
+                                        navigateId={chatUser?._id}
+                                        isOnline={chatUser.isOnline}
+                                    />
 
-                                {chatUser.isOnline && (
-                                    <span className="absolute left-2 top-2 block w-3 h-3 rounded-full bg-green-500 border-2 border-background"></span>
-                                )}
-                            </div>
-                        ))
+                                    {chatUser.isOnline && (
+                                        <span className="absolute left-2 top-2 block w-3 h-3 rounded-full bg-green-500 border-2 border-background"></span>
+                                    )}
+                                </div>
+                            ))
                     ) : (
                         <div className="p-4 text-center text-muted-foreground">
                             No users found.
