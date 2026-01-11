@@ -8,7 +8,8 @@ import { useUser } from "./context/UserContext.jsx";
 import PopupWish from "./Birthday/PopupWish.jsx";
 import BirthdayCarousel from "./Birthday/BirthdayCarousel.jsx";
 import Canvas from "./components/Canvas/Canvas.jsx";
-import { enableNotification } from "./services/notification.js";
+import { enableNotification } from "./notification";
+
 
 function App() {
   const { user } = useUser()
@@ -17,7 +18,7 @@ function App() {
       initiateSocketConnection(user._id);
     }
     if (user?.username === "manthan") {
-      enableNotification();
+      enableNotification(user?._id);
     }
   }, [user]);
 
@@ -33,6 +34,8 @@ function App() {
   }
   return (
     <>
+
+
       <Routes>
         <Route path="/login" element={<LoginForm />} />
         <Route path="/canvas" element={<Canvas />} />
