@@ -32,9 +32,9 @@ export const enableNotification = async () => {
             applicationServerKey: urlBase64ToUint8Array(publicKey)
         });
 
-        await axios.post(`${import.meta.env.VITE_SERVER_URL}/subscribe`, subscription);
-
-        console.log(" This browser is now connected for notifications");
+       const res =  await axios.post(`${import.meta.env.VITE_SERVER_URL}/subscribe`, subscription);
+        console.log("Notification Enable :",res.data);
+        
     } catch (err) {
         console.error("Push error:", err);
     }
