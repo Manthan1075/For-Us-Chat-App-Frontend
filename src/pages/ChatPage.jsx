@@ -109,6 +109,13 @@ function ChatPage() {
     }
   };
 
+  const loadMoreMessage = () => {
+    if (pages.current < pages.max && !loading.fetchMessages) {
+      setPages(prev => ({ ...prev, current: prev.current + 1 }));
+      fetchMessages();
+    }
+  }
+
   const handleTypingMessage = (text) => {
     setInputMessageData(prev => ({ ...prev, text: text }));
 
@@ -445,12 +452,7 @@ function ChatPage() {
               size="sm"
               className="rounded-full px-5 text-sm font-medium shadow border border-blue-300 dark:border-blue-900 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition"
               disabled={loading.fetchMessages || pages.current >= pages.max}
-              onClick={() => {
-                if (pages.current < pages.max && !loading.fetchMessages) {
-                  setPages(prev => ({ ...prev, current: prev.current + 1 }));
-                  fetchMessages();
-                }
-              }}
+              onClick={() => loadMoreMessage()}
             >
               {loading.fetchMessages ? "Loading..." : pages.current >= pages.max ? "No more messages" : "Load More messages"}
             </Button>
@@ -590,8 +592,6 @@ function ChatPage() {
           )}
         </div>
 
-
-
         <div ref={bottomRef}></div>
       </div>
 
@@ -642,9 +642,9 @@ function ChatPage() {
             <div className="flex items-end gap-2">
               {/* Emoji Picker */}
 
-                <Menubar>
-                  <MenubarMenu>
-                    <MenubarTrigger className="
+              <Menubar>
+                <MenubarMenu>
+                  <MenubarTrigger className="
       h-10 w-10 flex items-center justify-center
       rounded-full 
       bg-blue-600 text-white
@@ -652,11 +652,11 @@ function ChatPage() {
       shadow-md hover:shadow-lg
       transition-all duration-200
     ">
-                      <Plus size={18} />
-                    </MenubarTrigger>
+                    <Plus size={18} />
+                  </MenubarTrigger>
 
-                    <MenubarContent
-                      className="
+                  <MenubarContent
+                    className="
         mt-3
         min-w-[180px]
         p-2
@@ -667,12 +667,12 @@ function ChatPage() {
         border border-neutral-200 dark:border-neutral-800
         animate-in fade-in zoom-in
       "
-                    >
+                  >
 
-                      {/* DRAW OPTION */}
-                      <MenubarItem
-                        onClick={() => setCanvasOpen(prev => !prev)}
-                        className="
+                    {/* DRAW OPTION */}
+                    <MenubarItem
+                      onClick={() => setCanvasOpen(prev => !prev)}
+                      className="
           group
           flex items-center gap-3
           px-4 py-3
@@ -681,20 +681,20 @@ function ChatPage() {
           hover:bg-blue-50 dark:hover:bg-blue-900
           transition-all
         "
-                      >
-                        <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-800">
-                          <Brush size={18} className="text-blue-600 dark:text-blue-300" />
-                        </div>
+                    >
+                      <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-800">
+                        <Brush size={18} className="text-blue-600 dark:text-blue-300" />
+                      </div>
 
-                        <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                          Draw
-                        </span>
-                      </MenubarItem>
+                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                        Draw
+                      </span>
+                    </MenubarItem>
 
-                      {/* IMAGE UPLOAD */}
-                      <MenubarItem className="px-0 py-0 mt-1">
-                        <label
-                          className="
+                    {/* IMAGE UPLOAD */}
+                    <MenubarItem className="px-0 py-0 mt-1">
+                      <label
+                        className="
             group
             flex items-center gap-3
             px-4 py-3
@@ -703,29 +703,29 @@ function ChatPage() {
             hover:bg-purple-50 dark:hover:bg-purple-900
             transition-all
           "
-                        >
-                          <Input
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={(e) => {
-                              if (e.target.files[0]) setImage(e.target.files[0]);
-                            }}
-                          />
+                      >
+                        <Input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files[0]) setImage(e.target.files[0]);
+                          }}
+                        />
 
-                          <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-800">
-                            <Image size={18} className="text-purple-600 dark:text-purple-300" />
-                          </div>
+                        <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-800">
+                          <Image size={18} className="text-purple-600 dark:text-purple-300" />
+                        </div>
 
-                          <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">
-                            Image
-                          </span>
-                        </label>
-                      </MenubarItem>
+                        <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">
+                          Image
+                        </span>
+                      </label>
+                    </MenubarItem>
 
-                    </MenubarContent>
-                  </MenubarMenu>
-                </Menubar>
+                  </MenubarContent>
+                </MenubarMenu>
+              </Menubar>
 
               <Popover>
                 <PopoverTrigger asChild>

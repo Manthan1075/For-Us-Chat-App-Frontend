@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { ReactSketchCanvas } from "react-sketch-canvas";
 import { Button } from "../ui/button";
-import { Eraser, Redo, Undo, Brush, X } from "lucide-react";
-import { Input } from "../ui/input";
+import { Eraser, Redo, Undo, X, Palette } from "lucide-react";
 import { getSocket } from "../../socket/socket";
 import { useParams } from "react-router-dom";
-import { toast } from 'react-toastify'
+import { toast } from "react-toastify";
 import { sendDrawing } from "../../services/messageServices.js";
 import { useUser } from "../../context/UserContext.jsx";
+import { SketchPicker } from "react-color";
 
 function Canvas({ showCanvas, setMessage }) {
     const canvasRef = useRef(null);
@@ -15,10 +15,28 @@ function Canvas({ showCanvas, setMessage }) {
     const [color, setColor] = useState("#000000");
     const [strokeWidth, setStrokeWidth] = useState(4);
     const [eraseMode, setEraseMode] = useState(false);
+    const [showPicker, setShowPicker] = useState(false);
+    const colorPickerRef = useRef(null);
     const { user } = useUser();
 
-
     const typingTimeout = useRef(null);
+
+    useEffect(() => {
+        if (!showPicker) return;
+
+        function handleClickOutside(event) {
+            if (
+                colorPickerRef.current &&
+                !colorPickerRef.current.contains(event.target)
+            ) {
+                setShowPicker(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [showPicker]);
 
     const toggleEraser = () => {
         setEraseMode((prev) => !prev);
@@ -37,12 +55,10 @@ function Canvas({ showCanvas, setMessage }) {
         });
 
         typingTimeout.current = setTimeout(() => {
-            if (getSocket()) {
-                getSocket().emit("drawing", {
-                    receiver: friendId,
-                    drawing: false,
-                });
-            }
+            getSocket()?.emit("drawing", {
+                receiver: friendId,
+                drawing: false,
+            });
         }, 800);
     };
 
@@ -59,102 +75,98 @@ function Canvas({ showCanvas, setMessage }) {
                 sendDrawing({
                     receiverId: friendId,
                     userId: user._id,
-                    image: exportedImage
+                    image: exportedImage,
                 }),
                 {
                     pending: "Sending drawing...",
                     success: "Drawing sent!",
-                    error: "Failed to send drawing."
+                    error: "Failed to send drawing.",
                 }
             );
 
-            if (response && response.success) {
-                const socket = getSocket();
-                socket.emit("image_message", {
+            if (response?.success) {
+                getSocket().emit("image_message", {
                     message: response.data,
                     receiver: friendId,
                 });
-                setMessage(prev => [...prev, response.data]);
+
+                setMessage((prev) => [...prev, response.data]);
                 canvasRef.current.clearCanvas();
                 showCanvas(false);
             } else {
                 toast.error(response?.message || "Failed to send drawing.");
             }
-
         } catch (error) {
             toast.error("An error occurred while sending drawing.");
-            console.error("Error sending drawing:", error);
+            console.error(error);
         }
-    }
+    };
 
     return (
-        <div className="z-50 fixed bottom-0 left-0 w-full flex flex-col items-center">
-            <div className="w-full flex justify-between items-center px-3 pt-3 pb-2">
-                <span className="font-bold text-lg sm:text-base text-neutral-700 dark:text-neutral-200">Drawing Canvas</span>
-                <Button
-                    onClick={() => showCanvas(false)}
-                    className={`
-                        h-11 w-11 p-0 rounded-full shadow-md
-                        bg-red-500 text-white hover:bg-red-600
-                        flex items-center justify-center
-                        transition-all duration-150
-                        active:scale-95
-                        sm:h-9 sm:w-9
-                    `}
-                    aria-label="Close canvas"
-                >
-                    <X size={28} />
-                </Button>
-            </div>
+        <div className="z-50 fixed bottom-0 left-0 w-full flex flex-col items-center bg-white dark:bg-neutral-950">
+
+            {/* Top Bar */}
+            <Button variant="destructive" onClick={() => showCanvas(false)}>
+                Close <X />
+            </Button>
+
             {/* Toolbar */}
-            <div className="flex items-center gap-6 p-4 bg-white/80 dark:bg-neutral-900 backdrop-blur-lg rounded-xl shadow-xl max-w-md mx-auto my-4 justify-center border border-gray-200 dark:border-neutral-800">
+            <div className="flex flex-wrap items-center gap-4 p-3 bg-white dark:bg-neutral-900 shadow-md w-full justify-center">
 
-                {/* Color Picker */}
-                <div className="flex flex-col items-center gap-1">
-                    <label className="text-xs font-semibold mb-1">Color</label>
-                    <input
-                        type="color"
-                        value={color}
-                        onChange={(e) => setColor(e.target.value)}
-                        className="h-9 w-12 rounded-lg border-2 border-neutral-300 dark:border-neutral-700 shadow-sm cursor-pointer outline-none focus:ring-2 focus:ring-blue-400 transition p-0 bg-transparent"
-                        style={{
-                            boxShadow: "0 2px 8px rgba(36,36,36,0.07)",
-                        }}
-                    />
-                </div>
-
-                {/* Tools */}
-                <div className="flex items-center gap-2">
+                {/* Color Picker Button */}
+                <div className="relative" ref={colorPickerRef}>
                     <Button
-                        variant={eraseMode ? "default" : "ghost"}
-                        onClick={toggleEraser}
-                        className={`rounded-full transition ${eraseMode ? "bg-red-500 text-white" : ""
-                            }`}
+                        variant="outline"
+                        onClick={() => setShowPicker(!showPicker)}
+                        className="flex gap-2"
                     >
-                        <Eraser size={20} />
+                        <Palette />
+                        <div
+                            className="h-5 w-5 rounded-full border"
+                            style={{ background: color }}
+                        />
                     </Button>
 
-                    <Button variant="ghost" onClick={() => canvasRef.current.undo()}>
-                        <Undo size={20} />
-                    </Button>
-
-                    <Button variant="ghost" onClick={() => canvasRef.current.redo()}>
-                        <Redo size={20} />
-                    </Button>
+                    {showPicker && (
+                        <div className="absolute z-50 top-12 left-0">
+                            <SketchPicker
+                                color={color}
+                                onChange={(c) => setColor(c.hex)}
+                                disableAlpha
+                            />
+                        </div>
+                    )}
                 </div>
+
+                {/* Eraser */}
+                <Button
+                    onClick={toggleEraser}
+                    className={eraseMode ? "bg-red-500 text-white" : ""}
+                    variant="outline"
+                >
+                    <Eraser />
+                </Button>
+
+                <Button onClick={() => canvasRef.current.undo()} variant="outline">
+                    <Undo />
+                </Button>
+
+                <Button onClick={() => canvasRef.current.redo()} variant="outline">
+                    <Redo />
+                </Button>
 
                 {/* Brush Size */}
-                <div className="flex flex-col items-center gap-1">
-                    <label className="text-xs font-semibold">Brush</label>
+                <div className="flex flex-col items-center">
+                    <span className="text-xs font-semibold">Brush</span>
                     <input
                         type="range"
                         min={1}
                         max={50}
                         value={strokeWidth}
                         onChange={(e) => setStrokeWidth(Number(e.target.value))}
-                        className="w-32 accent-indigo-500"
+                        className="w-32"
                     />
-                    <span className="text-xs font-bold">{strokeWidth}px</span>
+                    <span className="text-xs">{strokeWidth}px</span>
                 </div>
             </div>
 
@@ -164,10 +176,7 @@ function Canvas({ showCanvas, setMessage }) {
                 style={{
                     width: "100vw",
                     height: "60vh",
-                    borderTop: "2px solid #333",
-                    boxShadow: "0 0 12px rgba(0,0,0,0.5)",
-                    background: "linear-gradient(180deg,#fff,#f3f3f3)",
-                    cursor: eraseMode ? "crosshair" : "url('/pen.cur'), auto",
+                    background: "#fff",
                 }}
                 strokeColor={color}
                 strokeWidth={strokeWidth}
@@ -175,8 +184,10 @@ function Canvas({ showCanvas, setMessage }) {
                 eraseMode={eraseMode}
                 onChange={handleCanvasChange}
             />
+
+            {/* Send */}
             <Button
-                className="w-full rounded-lg py-3 text-base font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white"
                 onClick={handleSendDrawing}
             >
                 Send Drawing
