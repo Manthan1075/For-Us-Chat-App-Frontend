@@ -13,12 +13,17 @@ export const enableNotification = async (userId) => {
 
     console.log("FCM Token:", token);
 
-    await axios.post(`${import.meta.env.VITE_SERVER_URL}/notification/subscribe`, {
+    const res = await axios.post(`${import.meta.env.VITE_SERVER_URL}/notification/subscribe`, {
       userId,
       token,
     });
 
-    console.log("Notification enabled");
+    if (res.data.success) {
+      alert("Notification enabled");
+    } else {
+      alert("Notification not enabled");
+    }
+
   } catch (err) {
     console.error("Notification error:", err);
   }

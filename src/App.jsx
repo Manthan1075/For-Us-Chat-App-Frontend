@@ -1,6 +1,6 @@
 import { Outlet, Route, Routes } from "react-router-dom";
 import { LoginForm, AuthCheck, Navbar, Chatbar, ChatPage, PageNotFound, SongWish } from './index'
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import SelectUser from "./pages/SelectUser.jsx";
 import { useEffect } from "react";
 import { initiateSocketConnection } from "./socket/socket.js";
