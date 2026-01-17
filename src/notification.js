@@ -16,11 +16,6 @@ export const enableNotification = async (userId) => {
       token,
     });
 
-    if (res.data.success) {
-      console.log("Notification enabled");
-    } else {
-      console.error("Notification enabling failed", res.data);
-    }
 
   } catch (err) {
     console.error("Notification error:", err);
