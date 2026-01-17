@@ -75,6 +75,7 @@ function ChatPage() {
   }, []);
 
   const refreshMessages = async () => {
+    setLoading(prev => ({ ...prev, fetchMessages: true }));
     try {
       const res = await getMessages({
         senderId: friendId,
@@ -99,6 +100,8 @@ function ChatPage() {
     } catch (error) {
       console.log("Error In Refresh Messages :", error);
       return error;
+    } finally {
+      setLoading(prev => ({ ...prev, fetchMessages: false }));
     }
   };
 
