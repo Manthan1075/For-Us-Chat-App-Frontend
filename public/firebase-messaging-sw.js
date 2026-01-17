@@ -12,7 +12,6 @@ const messaging = firebase.messaging();
 
 
 messaging.onBackgroundMessage((payload) => {
-  console.log("[SW] Background message:", payload);
 
   const notificationTitle =
     payload.notification?.title || "New Notification";
@@ -24,7 +23,6 @@ messaging.onBackgroundMessage((payload) => {
     tag: "main-notification",
     renotify: false,
 
-    // optional image if you send from server
     image: payload.notification?.image || undefined,
 
     data: {
