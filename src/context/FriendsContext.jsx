@@ -1,4 +1,3 @@
-// FriendsContext.jsx
 import { createContext, useContext, useState } from "react";
 
 const FriendsContext = createContext();
@@ -6,24 +5,20 @@ const FriendsContext = createContext();
 export const FriendsProvider = ({ children }) => {
     const [friends, setFriends] = useState([]);
 
-    const setAllFriends = (list) => {
-        setFriends(list);
-    };
-
-    const updateOnlineUsers = (onlineUserIds) => {
-        setFriends(prev =>
-            prev.map(friend => ({
+    const setAllFriends = (friendsList, onlineUsers) => {
+        setFriends(
+            friendsList.map(friend => ({
                 ...friend,
-                isOnline: onlineUserIds.includes(friend._id)
+                isOnline: Array.isArray(onlineUsers) ? onlineUsers.includes(friend._id) : !!friend.isOnline
             }))
         );
     };
 
-    const setActiveFriend = (friendId) => {
-        setFriends(prev =>
-            prev.map(friend => ({
+    const setOnlineFriends = (onlineUsers) => {
+        setFriends(prevFriends =>
+            prevFriends.map(friend => ({
                 ...friend,
-                isActiveChat: user._id === friendId
+                isOnline: Array.isArray(onlineUsers) ? onlineUsers.includes(friend._id) : !!friend.isOnline
             }))
         );
     };
@@ -32,8 +27,7 @@ export const FriendsProvider = ({ children }) => {
         <FriendsContext.Provider value={{
             friends,
             setAllFriends,
-            updateOnlineUsers,
-            setActiveFriend
+            setOnlineFriends
         }}>
             {children}
         </FriendsContext.Provider>

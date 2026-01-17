@@ -91,6 +91,8 @@ export const getMessages = async ({
   date,
   userId,
   senderId,
+  before,
+  after
 }) => {
   try {
     if (!senderId) {
@@ -103,6 +105,13 @@ export const getMessages = async ({
     const queryParams = new URLSearchParams();
     queryParams.append("page", page);
     queryParams.append("limit", limit);
+    
+    if (after) {
+      queryParams.append("after", after);
+    }
+    if (before) {
+      queryParams.append("before", before);
+    }
 
     if (isOnlyHighlighted !== undefined) {
       queryParams.append("isOnlyHighlighted", isOnlyHighlighted);

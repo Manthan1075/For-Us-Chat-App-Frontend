@@ -11,17 +11,15 @@ export const enableNotification = async (userId) => {
       vapidKey: import.meta.env.VITE_FIREBASE_VAPID,
     });
 
-    console.log("FCM Token:", token);
-
     const res = await axios.post(`${import.meta.env.VITE_SERVER_URL}/notification/subscribe`, {
       userId,
       token,
     });
 
     if (res.data.success) {
-      alert("Notification enabled");
+      console.log("Notification enabled");
     } else {
-      alert("Notification not enabled");
+      console.error("Notification enabling failed", res.data);
     }
 
   } catch (err) {

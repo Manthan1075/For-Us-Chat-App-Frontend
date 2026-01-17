@@ -10,7 +10,7 @@ function isLink(text) {
     return /^(https?:\/\/|www\.)[^\s]+$/i.test(text.trim());
 }
 
-function Message({ message, isSender, repliedOfText }) {
+function Message({ message, isSender, repliedOfText, setRepliedOfMessage }) {
     const { text, createdAt, isSeen, isDeleted, image, repliedOf, edits, isHighlighted, reaction } = message;
 
     const formattedTime = new Date(createdAt).toLocaleTimeString([], {
@@ -62,7 +62,6 @@ function Message({ message, isSender, repliedOfText }) {
                 boxSizing: "border-box"
             }}
         >
-            {/* Reply Preview */}
             {repliedOf && (
                 <div
                     className={`

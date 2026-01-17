@@ -31,6 +31,8 @@ function ChatPage() {
   const [isDrawing, setIsDrawing] = useState(false)
   const [openReactionPopover, setOpenReactionPopover] = useState(null);
   const [CanvasOpen, setCanvasOpen] = useState(false);
+  const firstMessageRef = useRef(null);
+  const lastMessageRef = useRef(null);
   const [editMsg, setEditMsg] = useState({
     _id: null,
     text: "",
@@ -52,6 +54,7 @@ function ChatPage() {
     width: window.innerWidth < 640 ? Math.min(320, window.innerWidth - 16) : 300,
     height: window.innerWidth < 640 ? 320 : 350
   });
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -71,51 +74,99 @@ function ChatPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const fetchMessages = async () => {
+  const refreshMessages = async () => {
     try {
-      setLoading(prev => ({ ...prev, fetchMessages: true }));
-
-      const response = await getMessages({
+      const res = await getMessages({
         senderId: friendId,
-        page: pages.current,
+        userId: user._id,
         limit: 30,
-        userId: user?._id,
+        after: lastMessageRef.current
       });
 
-      if (!response.success) {
-        toast.error("Failed To Get Messages Please Try Again");
-        return;
+      if (!res.success) return;
+
+      const batch = res.data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+      setMessages(prev => {
+        const ids = new Set(prev.map(m => m._id));
+        const fresh = batch.filter(m => !ids.has(m._id));
+        return [...prev, ...fresh];
+      });
+
+      if (batch.length) {
+        lastMessageRef.current = batch[batch.length - 1].createdAt;
+      }
+    } catch (error) {
+      console.log("Error In Refresh Messages :", error);
+      return error;
+    }
+  };
+
+  const fetchInitialMessages = async () => {
+    setLoading(prev => ({ ...prev, fetchMessages: true }));
+    try {
+      const res = await getMessages({
+        senderId: friendId,
+        userId: user._id,
+        limit: 30
+      });
+
+      if (!res.success) return;
+
+      const msgs = res.data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+      setMessages(msgs);
+
+      if (msgs.length) {
+        firstMessageRef.current = msgs[0].createdAt;
+        lastMessageRef.current = msgs[msgs.length - 1].createdAt;
       }
 
-      setMessages(prevMessages => {
-        const existingIds = new Set(prevMessages.map(msg => msg?._id));
-        const batch = response.data.slice().reverse();
-        const filtered = batch.filter(msg => !existingIds.has(msg._id));
-
-        if (pages.current > 1) {
-          return [...filtered, ...prevMessages];
-        }
-        return [...prevMessages, ...filtered];
-      });
-
-      setPages(prev => ({
-        ...prev,
-        max: response.pagination.totalPages
-      }));
-
+      // Set hasMore based on pagination or if we got fewer messages than requested
+      setHasMore(
+        msgs.length >= 30 &&
+        res.pagination &&
+        res.pagination.currentPage < res.pagination.totalPages
+      );
     } catch (error) {
-      console.log("ERROR GETTING MESSAGES :", error);
+      console.error("Error fetching initial messages:", error);
     } finally {
       setLoading(prev => ({ ...prev, fetchMessages: false }));
     }
   };
 
-  const loadMoreMessage = () => {
-    if (pages.current < pages.max && !loading.fetchMessages) {
-      setPages(prev => ({ ...prev, current: prev.current + 1 }));
-      fetchMessages();
+  const loadMoreMessages = async () => {
+    if (!hasMore || loading.fetchMessages) return;
+
+    setLoading(prev => ({ ...prev, fetchMessages: true }));
+
+    try {
+      const res = await getMessages({
+        senderId: friendId,
+        userId: user._id,
+        limit: 30,
+        before: firstMessageRef.current
+      });
+
+      if (!res.success) return;
+
+      const batch = res.data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+      setMessages(prev => [...batch, ...prev]);
+
+      if (batch.length) {
+        firstMessageRef.current = batch[0].createdAt;
+      }
+
+      if (batch.length < 30) {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Error loading more messages:", error);
+    } finally {
+      setLoading(prev => ({ ...prev, fetchMessages: false }));
     }
-  }
+  };
 
   const handleTypingMessage = (text) => {
     setInputMessageData(prev => ({ ...prev, text: text }));
@@ -323,7 +374,7 @@ function ChatPage() {
 
   useEffect(() => {
     setMessages([]);
-    fetchMessages();
+    fetchInitialMessages();
   }, [friendId]);
 
   useEffect(() => {
@@ -332,16 +383,18 @@ function ChatPage() {
 
     handlers.handleReceiveMessage = ({ message }) => {
       setMessages(prev => {
-        if (prev.find(m => m._id === message._id)) return prev;
+        if (prev.some(m => m._id === message._id)) return prev;
+
+        lastMessageRef.current = message.createdAt;
+        if (message.sender === friendId) {
+          const socket = getSocket();
+          socket.emit("seen_message", {
+            message,
+            receiver: friendId,
+          });
+        }
         return [...prev, message];
       });
-      if (message.sender === friendId) {
-        const socket = getSocket();
-        socket.emit("seen_message", {
-          message,
-          receiver: friendId,
-        });
-      }
     };
 
     handlers.handleEditReceiveMessage = (data) => {
@@ -435,7 +488,7 @@ function ChatPage() {
       <Button
         variant="outline"
         className="fixed top-20 right-4 z-20 p-2 rounded-full h-9 w-9 flex items-center justify-center shadow-md bg-white/80 dark:bg-black/80 backdrop-blur"
-        onClick={fetchMessages}
+        onClick={refreshMessages}
         aria-label="Refresh messages"
         title="Refresh messages"
       >
@@ -452,10 +505,10 @@ function ChatPage() {
               variant="outline"
               size="sm"
               className="rounded-full px-5 text-sm font-medium shadow border border-blue-300 dark:border-blue-900 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition"
-              disabled={loading.fetchMessages || pages.current >= pages.max}
-              onClick={() => loadMoreMessage()}
+              disabled={loading.fetchMessages || !hasMore}
+              onClick={() => loadMoreMessages()}
             >
-              {loading.fetchMessages ? "Loading..." : pages.current >= pages.max ? "No more messages" : "Load More messages"}
+              {loading.fetchMessages ? "Loading..." : hasMore ? "Load More messages" : "No more messages"}
             </Button>
           </div>
         </div>
@@ -492,8 +545,6 @@ function ChatPage() {
                     />
                   </div>
                 </PopoverTrigger>
-
-
                 <PopoverContent className="w-40 p-1 rounded-lg shadow-lg">
                   {/* Popover content logic same as before... */}
                   <div className="flex flex-col gap-1.5 py-2 px-1 rounded-xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md shadow-lg ring-1 ring-indigo-200/60 dark:ring-indigo-600/20 transition-all">
@@ -562,6 +613,7 @@ function ChatPage() {
             No messages yet. Say hi!
           </div>
         )}
+
         {/* Animated Typing/Drawing Status */}
         <div className="relative min-h-[28px]">
           {(isTyping || isDrawing) && (
@@ -621,7 +673,6 @@ function ChatPage() {
             </Button>
           </div>
         )}
-
 
 
         {/* 2. Image Upload Preview Mode */}

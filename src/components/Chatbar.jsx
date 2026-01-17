@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import UserChat from "./UserChat.jsx";
 import { fetchAllUsers } from "../services/userServices.js";
 import { useUser } from "../context/UserContext.jsx";
@@ -9,49 +9,102 @@ import CreateUser from "./CreateUser.jsx";
 import { subscribe, getSocket } from "../socket/socket.js";
 import { useParams } from 'react-router-dom'
 import { useFriends } from "../context/FriendsContext.jsx";
+import { toast } from "react-toastify";
 
 function Chatbar() {
     const { user } = useUser();
-    const { friends, setAllFriends, updateOnlineUsers } = useFriends()
+    const { friends, setAllFriends, setOnlineFriends } = useFriends()
     const [isOpen, setIsOpen] = useState(true);
     const { friendId } = useParams();
     const [loading, setLoading] = useState(false)
     const socket = getSocket();
+    const [onlineUsers, setOnlineUsersState] = useState([]);
+    const onlineUsersRef = useRef([]);
+    const hasInitializedRef = useRef(false);
+    const friendsLoadedRef = useRef(false);
 
-
-    const fetchUsers = async () => {
+    const fetchUsers = async (currentOnlineUsers = null) => {
         try {
             setLoading(true);
             const res = await fetchAllUsers(user._id);
             if (res.success) {
-                setAllFriends(res.users);
+                let onlineUsersToUse = null;
+
+                if (currentOnlineUsers !== null) {
+                    onlineUsersToUse = currentOnlineUsers;
+                } else if (onlineUsersRef.current.length > 0) {
+                    onlineUsersToUse = onlineUsersRef.current;
+                } else if (onlineUsers.length > 0) {
+                    onlineUsersToUse = onlineUsers;
+                } else {
+                    onlineUsersToUse = friends
+                        .filter(friend => friend.isOnline)
+                        .map(friend => friend._id);
+                }
+
+                setAllFriends(res.users, onlineUsersToUse || []);
+                friendsLoadedRef.current = true;
             }
         } catch (e) {
-            console.error(e);
+            console.error("Error While Fetch Users :", e);
+            toast.error("Failed To Get Users");
         } finally {
             setLoading(false);
         }
     };
 
+    const handleRefresh = async () => {
+        if (socket) {
+            socket.emit("get_online_users");
+        }
+
+        let onlineUsersToUse = null;
+        if (onlineUsersRef.current.length > 0) {
+            onlineUsersToUse = onlineUsersRef.current;
+        } else if (friends && friends.length > 0) {
+            onlineUsersToUse = friends
+                .filter(friend => friend.isOnline)
+                .map(friend => friend._id);
+        }
+
+        fetchUsers(onlineUsersToUse);
+    };
 
     useEffect(() => {
-        fetchUsers();
+        const unsubscribe = subscribe("online_users", (receivedOnlineUsers) => {
+            setOnlineUsersState(receivedOnlineUsers);
+            onlineUsersRef.current = receivedOnlineUsers || [];
+            setOnlineFriends(receivedOnlineUsers);
 
-        socket.emit("get_online_users");
-
-    }, []);
-
-    useEffect(() => {
-        const unsubscribe = subscribe("online_users", (onlineUsers) => {
-            updateOnlineUsers(
-                onlineUsers
-            );
+            if (!hasInitializedRef.current && Array.isArray(receivedOnlineUsers) && user?._id && !friendsLoadedRef.current) {
+                hasInitializedRef.current = true;
+                fetchUsers(receivedOnlineUsers);
+            }
         });
 
         return () => {
             if (unsubscribe) unsubscribe();
         };
-    }, [friends]);
+    }, [user?._id]);
+
+    useEffect(() => {
+        if (user?._id && socket) {
+            hasInitializedRef.current = false;
+            friendsLoadedRef.current = false;
+            onlineUsersRef.current = [];
+
+            socket.emit("get_online_users");
+
+            const fallbackTimer = setTimeout(() => {
+                if (!hasInitializedRef.current) {
+                    hasInitializedRef.current = true;
+                    fetchUsers();
+                }
+            }, 500);
+
+            return () => clearTimeout(fallbackTimer);
+        }
+    }, [user?._id, socket]);
 
     return (
         <>
@@ -87,7 +140,7 @@ function Chatbar() {
                 <div className="flex items-center justify-between gap-2 p-4 border-b bg-background">
                     <h2 className="font-semibold text-xl m-0 ml-10">Chats</h2>
                     <Button
-                        onClick={fetchUsers}
+                        onClick={handleRefresh}
                         variant="outline"
                         className="flex items-center gap-2 px-3 py-2 rounded-full border shadow-sm bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-indigo-600 dark:text-indigo-300"
                         title="Refresh user list"
