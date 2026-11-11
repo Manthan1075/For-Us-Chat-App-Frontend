@@ -9,12 +9,7 @@ const api = axios.create({
   },
 });
 
-export const sendMessage = async ({
-  text,
-  receiver,
-  repliedOf,
-  userid,
-}) => {
+export const sendMessage = async ({ text, receiver, repliedOf, userid }) => {
   try {
     const body = {
       text,
@@ -24,15 +19,12 @@ export const sendMessage = async ({
       body.repliedOf = repliedOf;
     }
 
-    const response = await api.post(`/send-message`,
-      body,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          userid: userid,
-        },
-      }
-    );
+    const response = await api.post(`/send-message`, body, {
+      headers: {
+        "Content-Type": "application/json",
+        userid: userid,
+      },
+    });
 
     return response.data || null;
   } catch (error) {
@@ -45,7 +37,6 @@ export const sendMessage = async ({
 };
 
 export const editMessage = async ({ text, messageId, userId }) => {
-
   try {
     const response = await api.put(
       `/edit-message/${messageId}`,
@@ -92,7 +83,7 @@ export const getMessages = async ({
   userId,
   senderId,
   before,
-  after
+  after,
 }) => {
   try {
     if (!senderId) {
@@ -105,7 +96,7 @@ export const getMessages = async ({
     const queryParams = new URLSearchParams();
     queryParams.append("page", page);
     queryParams.append("limit", limit);
-    
+
     if (after) {
       queryParams.append("after", after);
     }
@@ -134,11 +125,13 @@ export const getMessages = async ({
     console.error("Error While Get Messages : ", error);
     return {
       success: false,
-      message: error?.response?.data?.message || error?.message || "Something went wrong",
+      message:
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong",
     };
   }
 };
-
 
 export const reactOnMessage = async ({
   senderId,
@@ -171,7 +164,6 @@ export const reactOnMessage = async ({
 
 export const toggleHighlightMsg = async ({ messageId, userId }) => {
   try {
-
     const response = await api.put(
       `/toggle-highlight/${messageId}`,
       {},
@@ -196,22 +188,18 @@ export const sendImage = async ({ receiverId, image, userId }) => {
     const formData = new FormData();
     formData.append("image", image);
     formData.append("receiverId", receiverId);
-    const response = await axios.post(
-      `${BACKEND_URL}/send-image`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          userid: userId,
-        },
-      }
-    );
+    const response = await axios.post(`${BACKEND_URL}/send-image`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        userid: userId,
+      },
+    });
     return response.data || null;
   } catch (error) {
-    console.log("Error While Send Image :", error)
-    return error.message
+    console.log("Error While Send Image :", error);
+    return error.message;
   }
-}
+};
 
 export const sendDrawing = async ({ receiverId, image, userId }) => {
   try {
@@ -219,9 +207,38 @@ export const sendDrawing = async ({ receiverId, image, userId }) => {
       image,
       receiverId,
     };
-    const response = await axios.post(
-      `${BACKEND_URL}/send-drawing`,
-      payload,
+    const response = await axios.post(`${BACKEND_URL}/send-drawing`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        userid: userId,
+      },
+    });
+    return response.data || null;
+  } catch (error) {
+    console.log("Error While Send Drawing :", error);
+    return error.message;
+  }
+};
+
+export const fetchMedia = async ({
+  userId,
+  senderId,
+  isDrawing,
+  limit = 30,
+  page = 1,
+}) => {
+  try {
+    console.log("User Id :", userId);
+
+    const response = await axios.get(
+      `${BACKEND_URL}/get-media/${userId}`,
+      {
+        userId,
+        senderId,
+        isDrawing,
+        page,
+        limit,
+      },
       {
         headers: {
           "Content-Type": "application/json",
@@ -231,8 +248,7 @@ export const sendDrawing = async ({ receiverId, image, userId }) => {
     );
     return response.data || null;
   } catch (error) {
-    console.log("Error While Send Drawing :", error)
+    console.log("Error While Fetch Media :", error);
     return error.message;
   }
-}
-
+};

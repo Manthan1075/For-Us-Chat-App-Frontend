@@ -9,6 +9,7 @@ import PopupWish from "./Birthday/PopupWish.jsx";
 import BirthdayCarousel from "./Birthday/BirthdayCarousel.jsx";
 import Canvas from "./components/Canvas/Canvas.jsx";
 import { enableNotification } from "./notification";
+import MediaLibrary from "./pages/MediaLibrary.jsx";
 
 
 function App() {
@@ -44,10 +45,11 @@ function App() {
           <Route element={<Layout />}>
             <Route path="/" element={<SelectUser />} />
             <Route path="/chat/:friendId" element={<ChatPage />} />
+            <Route path="/media" element={<MediaLibrary />} />
           </Route>
-          <Route path="*" element={<PageNotFound />} />
         </Route>
 
+        <Route path="*" element={<PageNotFound />} />
         <Route path="/birthday/popup-wish" element={<PopupWish />} />
         <Route path="/birthday/card-wish" element={<BirthdayCarousel />} />
         <Route path="/birthday/song-wish" element={<SongWish />} />

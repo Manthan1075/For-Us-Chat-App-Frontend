@@ -7,7 +7,7 @@ import { SidebarOpen, X, UserPlus, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import CreateUser from "./CreateUser.jsx";
 import { subscribe, getSocket } from "../socket/socket.js";
-import { useParams } from 'react-router-dom'
+import { NavLink, useParams } from 'react-router-dom'
 import { useFriends } from "../context/FriendsContext.jsx";
 import { toast } from "react-toastify";
 
@@ -167,7 +167,7 @@ function Chatbar() {
                 </div>
 
 
-                <div className="px-3 pb-6 pt-1.5 overflow-y-auto h-[calc(100vh-150px)] space-y-2">
+                <div className="px-3 pb-6 pt-1.5 overflow-y-auto space-y-2">
                     {loading ? (
                         <div
                             className="flex items-center space-x-4 p-3 bg-white dark:bg-neutral-900 rounded-2xl border shadow animate-pulse"
@@ -211,6 +211,10 @@ function Chatbar() {
                             No users found.
                         </div>
                     )}
+                </div>
+
+                <div>
+                    <NavLink to={"/media"}>Media Library</NavLink>
                 </div>
 
             </aside>
